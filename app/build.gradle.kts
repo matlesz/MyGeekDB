@@ -1,7 +1,22 @@
+import java.util.Properties
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.compose)
+//  id("com.github.hierynomus.env") version "0.4"
+
+}
+
+// Helper to load .env variables
+fun getEnvVariable(name: String, default: String = ""): String {
+  val envFile = rootProject.file(".env")
+  if (envFile.exists()) {
+    val properties = Properties()
+    properties.load(envFile.inputStream())
+    return properties.getProperty(name, default)
+  }
+  return default
 }
 
 android {
@@ -16,6 +31,16 @@ android {
     versionName = "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    buildFeatures {
+      buildConfig = true
+    }
+    defaultConfig {
+      buildConfigField(
+        "String",
+        "TMDB_API_KEY",
+        "\"${getEnvVariable("TMDB_API_KEY", "default_api_key")}\""
+      )
+    }
   }
 
   buildTypes {

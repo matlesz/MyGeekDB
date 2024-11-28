@@ -9,7 +9,10 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import android.util.Log
-import ie.matlesz.mygeekdb.Constant
+import ie.matlesz.mygeekdb.BuildConfig
+import java.util.Properties
+
+
 
 data class Movie(
   val title: String,
@@ -27,7 +30,8 @@ class MovieViewModel : ViewModel() {
   }
 //init {
 //  _movies.value = listOf(
-//    FavoriteMovie("Inception", "A mind-bending thriller", ""),
+//    RecomendedMovie("Inception", "A mind-bending thriller", ""),
+//    RecomendedMovie("The Shawshank Redemption", "A powerful drama", ""),
 //    FavoriteMovie("Interstellar", "A space exploration journey", ""),
 //    FavoriteMovie("The Dark Knight", "A gripping superhero story", "")
 //  )
@@ -37,7 +41,7 @@ class MovieViewModel : ViewModel() {
     viewModelScope.launch(Dispatchers.IO) {
       try {
         val client = OkHttpClient()
-        val apiKey = "Bearer ${Constant.apiKey}"
+        val apiKey = "Bearer ${BuildConfig.TMDB_API_KEY}"
 
         // Recommendations request
         val request = Request.Builder()
