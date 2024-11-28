@@ -4,22 +4,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import android.util.Log
 import ie.matlesz.mygeekdb.BuildConfig
-import java.util.Properties
-
-
 
 data class Movie(
   val title: String,
   val overview: String,
   val posterPath: String,
   val thumbsUp: Int,
-  val thumbsDown: Int
+  val voteAverage: Double
 )
 
 class MovieViewModel : ViewModel() {
@@ -59,7 +55,8 @@ class MovieViewModel : ViewModel() {
                 val overview = movieJson.optString("overview", "N/A")
                 val baseImageUrl = "https://image.tmdb.org/t/p/w500" // Replace with the correct base URL from the API docs
                 val posterPath = movieJson.optString("poster_path", null)?.let { "$baseImageUrl$it" } ?: "https://example.com/placeholder.jpg"
-                movieList.add(Movie(title, overview, posterPath, thumbsUp = 0, thumbsDown = 0))
+                val voteAverage = movieJson.optDouble("vote_average", 0.0) // Extract vote_average
+                movieList.add(Movie(title, overview, posterPath, thumbsUp = 0, voteAverage = voteAverage))
               }
             }
 

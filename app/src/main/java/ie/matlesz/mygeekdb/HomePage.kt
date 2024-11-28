@@ -17,7 +17,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
-import androidx.compose.material.icons.filled.ThumbDown
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,27 +48,6 @@ fun MovieScreen(movieViewModel: MovieViewModel = viewModel()) {
     }
   }
 }
-
-//@Composable
-//fun MovieItem(movie: Movie) {
-//  Card(
-//    modifier = Modifier
-//      .fillMaxWidth()
-//      .wrapContentHeight(),
-//    elevation = CardDefaults.cardElevation(4.dp)
-//  ) {
-//    Column(modifier = Modifier.padding(16.dp)) {
-//      Text(
-//        text = movie.title,
-//        style = MaterialTheme.typography.titleLarge
-//      )
-//      Spacer(modifier = Modifier.height(4.dp))
-//      Text(
-//        text = movie.overview,
-//        style = MaterialTheme.typography.bodyMedium
-//      )
-//    }
-//  }
 
 @Composable
 fun MovieItem(movie: Movie) {
@@ -119,30 +97,17 @@ fun MovieItem(movie: Movie) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Thumbs up and down
+        // Vote Average with Thumbs Up Icon
         Row(
           verticalAlignment = Alignment.CenterVertically
         ) {
           Icon(
             imageVector = Icons.Default.ThumbUp,
-            contentDescription = "Thumbs Up",
+            contentDescription = "Vote Average",
             modifier = Modifier.size(20.dp)
           )
           Text(
-            text = "${movie.thumbsUp}",
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(start = 4.dp)
-          )
-
-          Spacer(modifier = Modifier.width(16.dp))
-
-          Icon(
-            imageVector = Icons.Default.ThumbDown,
-            contentDescription = "Thumbs Down",
-            modifier = Modifier.size(20.dp)
-          )
-          Text(
-            text = "${movie.thumbsDown}",
+            text = String.format("%.1f", movie.voteAverage), // Format to 1 decimal place
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(start = 4.dp)
           )
