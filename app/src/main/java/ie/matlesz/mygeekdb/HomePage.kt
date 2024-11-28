@@ -2,8 +2,6 @@ package ie.matlesz.mygeekdb
 
 import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,6 +22,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import java.util.Locale
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,31 +65,37 @@ fun MovieItem(movie: Movie) {
   ) {
     Row(
       modifier = Modifier
-        .padding(16.dp)
+        .padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 8.dp)
         .fillMaxWidth(),
-      horizontalArrangement = Arrangement.spacedBy(16.dp)
+      verticalAlignment = Alignment.CenterVertically, // Align items vertically to center
+      horizontalArrangement = Arrangement.spacedBy(7.dp) // Adjust spacing as needed
     ) {
       // Movie Poster
-      val darkGreen = null
-      Image(
-        painter = rememberAsyncImagePainter(movie.posterPath),
-        contentDescription = "Poster of ${movie.title}",
+      Box(
         modifier = Modifier
-          .size(120.dp)
-          .clip(RoundedCornerShape(20.dp))
-          .fillMaxSize()
-      )
+          .weight(0.3f)
+          .fillMaxHeight(),
+        contentAlignment = Alignment.Center // Centers the poster inside its box
+      ) {
+        Image(
+          painter = rememberAsyncImagePainter(movie.posterPath),
+          contentDescription = "Poster of ${movie.title}",
+          modifier = Modifier
+            .size(100.dp) // Adjust size to fit design
+            .clip(RoundedCornerShape(12.dp)) // Rounded corners
+        )
+      }
 
       // Movie Details
       Column(
         modifier = Modifier
-          .weight(1f)
+          .weight(0.7f) // Adjust weight to give space to details
           .fillMaxHeight()
       ) {
         // Title
         Text(
           text = movie.title,
-          style = MaterialTheme.typography.titleLarge,
+          style = MaterialTheme.typography.titleMedium,
           maxLines = 1,
           overflow = TextOverflow.Ellipsis
         )
@@ -98,7 +103,7 @@ fun MovieItem(movie: Movie) {
         // Overview (Restricted to 3 lines)
         Text(
           text = movie.overview,
-          style = MaterialTheme.typography.bodyMedium,
+          style = MaterialTheme.typography.bodySmall,
           maxLines = 3,
           overflow = TextOverflow.Ellipsis,
           modifier = Modifier.padding(top = 4.dp)
@@ -112,23 +117,23 @@ fun MovieItem(movie: Movie) {
           modifier = Modifier.fillMaxWidth(),
           horizontalArrangement = Arrangement.SpaceBetween
         ) {
-          Icon(
-            imageVector = Icons.Default.ThumbUp,
-            contentDescription = "Vote Average",
-            modifier = Modifier.size(20.dp)
-          )
-          Text(
-            text = String.format("%.1f", movie.voteAverage),
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(start = 0.dp)
-          )
-
-          Spacer(modifier = Modifier.width(16.dp))
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+              imageVector = Icons.Default.ThumbUp,
+              contentDescription = "Vote Average",
+              modifier = Modifier.size(20.dp)
+            )
+            Text(
+              text = String.format(Locale.US, "%.1f", movie.voteAverage),
+              style = MaterialTheme.typography.bodyMedium,
+              modifier = Modifier.padding(start = 4.dp)
+            )
+          }
 
           // Heart Icon (Clickable)
           var isFavorite by remember { mutableStateOf(false) }
           Icon(
-            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder, // Change icon based on state
+            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
             contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
             tint = if (isFavorite) Color.Red else Color.Gray,
             modifier = Modifier
