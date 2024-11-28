@@ -23,7 +23,7 @@ fun MovieScreen(movieViewModel: MovieViewModel = viewModel()) {
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Favorite Movies") }
+        title = { Text("Recommended Movies") }
       )
     }
   ) { paddingValues ->
