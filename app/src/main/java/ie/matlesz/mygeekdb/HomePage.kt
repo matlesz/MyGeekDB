@@ -2,9 +2,13 @@ package ie.matlesz.mygeekdb
 
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.*
@@ -13,10 +17,13 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,12 +71,14 @@ fun MovieItem(movie: Movie) {
       horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
       // Movie Poster
+      val darkGreen = null
       Image(
         painter = rememberAsyncImagePainter(movie.posterPath),
         contentDescription = "Poster of ${movie.title}",
         modifier = Modifier
-          .size(100.dp) // Adjust size as needed
-          .clip(MaterialTheme.shapes.medium)
+          .size(120.dp)
+          .clip(RoundedCornerShape(20.dp))
+          .fillMaxSize()
       )
 
       // Movie Details
@@ -99,7 +108,9 @@ fun MovieItem(movie: Movie) {
 
         // Vote Average with Thumbs Up Icon
         Row(
-          verticalAlignment = Alignment.CenterVertically
+          verticalAlignment = Alignment.CenterVertically,
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.SpaceBetween
         ) {
           Icon(
             imageVector = Icons.Default.ThumbUp,
@@ -107,9 +118,24 @@ fun MovieItem(movie: Movie) {
             modifier = Modifier.size(20.dp)
           )
           Text(
-            text = String.format("%.1f", movie.voteAverage), // Format to 1 decimal place
+            text = String.format("%.1f", movie.voteAverage),
             style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(start = 4.dp)
+            modifier = Modifier.padding(start = 0.dp)
+          )
+
+          Spacer(modifier = Modifier.width(16.dp))
+
+          // Heart Icon (Clickable)
+          var isFavorite by remember { mutableStateOf(false) }
+          Icon(
+            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder, // Change icon based on state
+            contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+            tint = if (isFavorite) Color.Red else Color.Gray,
+            modifier = Modifier
+              .size(20.dp)
+              .clickable {
+                isFavorite = !isFavorite
+              }
           )
         }
       }
