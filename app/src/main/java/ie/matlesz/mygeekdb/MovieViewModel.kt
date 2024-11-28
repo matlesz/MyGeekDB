@@ -17,7 +17,9 @@ import java.util.Properties
 data class Movie(
   val title: String,
   val overview: String,
-  val posterPath: String
+  val posterPath: String,
+  val thumbsUp: Int,
+  val thumbsDown: Int
 )
 
 class MovieViewModel : ViewModel() {
@@ -28,14 +30,6 @@ class MovieViewModel : ViewModel() {
   init {
     fetchMovieRecommendations()
   }
-//init {
-//  _movies.value = listOf(
-//    RecomendedMovie("Inception", "A mind-bending thriller", ""),
-//    RecomendedMovie("The Shawshank Redemption", "A powerful drama", ""),
-//    FavoriteMovie("Interstellar", "A space exploration journey", ""),
-//    FavoriteMovie("The Dark Knight", "A gripping superhero story", "")
-//  )
-//}
 
   fun fetchMovieRecommendations() {
     viewModelScope.launch(Dispatchers.IO) {
@@ -43,7 +37,6 @@ class MovieViewModel : ViewModel() {
         val client = OkHttpClient()
         val apiKey = "Bearer ${BuildConfig.TMDB_API_KEY}"
 
-        // Recommendations request
         val request = Request.Builder()
           .url("https://api.themoviedb.org/4/account/62cf1c5afcf907004dbdae6e/movie/recommendations?page=1&language=en-US")
           .get()
@@ -64,8 +57,9 @@ class MovieViewModel : ViewModel() {
                 val movieJson = it.getJSONObject(i)
                 val title = movieJson.optString("title", "N/A")
                 val overview = movieJson.optString("overview", "N/A")
-                val posterPath = movieJson.optString("poster_path", "")
-                movieList.add(Movie(title, overview, posterPath))
+                val baseImageUrl = "https://image.tmdb.org/t/p/w500" // Replace with the correct base URL from the API docs
+                val posterPath = movieJson.optString("poster_path", null)?.let { "$baseImageUrl$it" } ?: "https://example.com/placeholder.jpg"
+                movieList.add(Movie(title, overview, posterPath, thumbsUp = 0, thumbsDown = 0))
               }
             }
 
