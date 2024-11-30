@@ -25,8 +25,13 @@ import kotlinx.coroutines.launch
 import java.util.*
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.background
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.SemanticsProperties.ImeAction
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,7 +44,7 @@ fun MyTopBar(
   var searchQuery by remember { mutableStateOf("") }
 
   TopAppBar(
-    title = { /* Empty since the search bar is custom */ },
+    title = { /* Empty since we use a custom search bar */ },
     navigationIcon = {
       Icon(
         imageVector = Icons.Default.Menu,
@@ -59,8 +64,7 @@ fun MyTopBar(
         TextField(
           value = searchQuery,
           onValueChange = { query ->
-            searchQuery = query
-            onSearchQueryChange(query)
+            searchQuery = query // Update query state immediately
           },
           placeholder = { Text(text = "Search...", fontSize = 12.sp) },
           leadingIcon = {
@@ -72,14 +76,24 @@ fun MyTopBar(
           modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
-            .clickable { onSearchFocused() },
+            .clickable { onSearchFocused() }, // Handle search focus
           shape = RoundedCornerShape(24.dp),
           colors = TextFieldDefaults.colors(
             focusedContainerColor = Color.LightGray,
             unfocusedContainerColor = Color.LightGray,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent
-          )
+          ),
+          keyboardOptions = KeyboardOptions.Default.copy(
+            imeAction = androidx.compose.ui.text.input.ImeAction.Search // IME action for search
+          ),
+          keyboardActions = KeyboardActions(
+            onSearch = {
+              // Trigger the search action
+              onSearchQueryChange(searchQuery.trim()) // Ensure trimmed query is sent
+            }
+          ),
+          maxLines = 1
         )
       }
 
@@ -93,7 +107,7 @@ fun MyTopBar(
       )
     },
     modifier = Modifier.fillMaxWidth(),
-    colors = TopAppBarDefaults.smallTopAppBarColors(
+    colors = TopAppBarDefaults.topAppBarColors(
       containerColor = Color.White,
       titleContentColor = Color.Black,
       navigationIconContentColor = Color.Black,
@@ -108,6 +122,7 @@ fun HomePage(
   movieViewModel: MovieViewModel = viewModel(),
   seriesViewModel: SeriesViewModel = viewModel()
 ) {
+  val focusManager = LocalFocusManager.current // Manage focus to dismiss the keyboard
   val movies by movieViewModel.movies.observeAsState(emptyList())
   val series by seriesViewModel.series.observeAsState(emptyList())
   val movieSearchResults by movieViewModel.searchResults.observeAsState(emptyList())
@@ -123,125 +138,131 @@ fun HomePage(
   val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
   val scope = rememberCoroutineScope()
 
-  ModalNavigationDrawer(
-    drawerState = drawerState,
-    drawerContent = {
-      // Drawer content with restricted width
-      Box(
-        modifier = Modifier
-          .fillMaxHeight()
-          .width(LocalConfiguration.current.screenWidthDp.dp * 0.75f) // Set width to 3/4 of the screen
-          .background(
-            Brush.verticalGradient(
-              colors = listOf(Color(0xFF6200EE), Color(0xFF03DAC5))
+  // Add a clickable Box to clear focus on outside touch
+  Box(
+    modifier = Modifier
+      .fillMaxSize()
+      .clickable { focusManager.clearFocus() } // Dismiss the keyboard on click
+  ) {
+    ModalNavigationDrawer(
+      drawerState = drawerState,
+      drawerContent = {
+        // Drawer content with restricted width
+        Box(
+          modifier = Modifier
+            .fillMaxHeight()
+            .width(LocalConfiguration.current.screenWidthDp.dp * 0.75f) // Set width to 3/4 of the screen
+            .background(
+              Brush.verticalGradient(
+                colors = listOf(Color(0xFF6200EE), Color(0xFF03DAC5))
+              )
             )
+        ) {
+          Column {
+            Box(
+              modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+              contentAlignment = Alignment.TopStart
+            ) {
+              IconButton(onClick = { scope.launch { drawerState.close() } }) {
+                Icon(
+                  imageVector = Icons.Default.Close,
+                  contentDescription = "Close Drawer",
+                  tint = Color.White
+                )
+              }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+              text = "Navigation",
+              style = MaterialTheme.typography.headlineMedium,
+              color = Color.White,
+              modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+            HorizontalDivider(color = Color.White)
+            Spacer(modifier = Modifier.height(8.dp))
+            DrawerMenuItem(text = "Home", onClick = { /* Handle Home Navigation */ })
+            DrawerMenuItem(text = "Profile", onClick = { /* Handle Profile Navigation */ })
+            DrawerMenuItem(text = "Settings", onClick = { /* Handle Settings Navigation */ })
+            DrawerMenuItem(text = "Logout", onClick = { /* Handle Logout */ })
+          }
+        }
+      },
+      scrimColor = Color.Transparent // Ensures no semi-transparent background is visible when drawer is closed
+    ) {
+      Scaffold(
+        topBar = {
+          MyTopBar(
+            onHamburgerClick = {
+              scope.launch { drawerState.open() }
+            },
+            onSearchQueryChange = { query ->
+              searchQuery = query
+              isSearchFocused = true
+              if (isSearchFocused) {
+                if (currentSearchType == "Movie") {
+                  movieViewModel.searchMovies(query)
+                } else {
+                  seriesViewModel.searchSeries(query)
+                }
+              }
+            },
+            onLogoClick = {
+              isSearchFocused = false
+              searchQuery = ""
+            },
+            onSearchFocused = {
+              isSearchFocused = true
+              if (searchQuery.isEmpty()) {
+                // Default to movie search on first focus
+                movieViewModel.searchMovies("default") // Replace "default" with your desired query
+              }
+            }
           )
-      ) {
-        Column {
-          // Close Button at the top-left
-          Box(
+        }
+      ) { paddingValues ->
+        if (isSearchFocused) {
+          SearchView(
+            searchQuery = searchQuery,
+            onBackPressed = { isSearchFocused = false },
+            searchResults = searchResults,
+            onSearchTypeChange = { type ->
+              currentSearchType = type
+              if (searchQuery.isNotEmpty()) {
+                if (type == "Movie") {
+                  movieViewModel.searchMovies(searchQuery)
+                } else {
+                  seriesViewModel.searchSeries(searchQuery)
+                }
+              }
+            },
+            currentSearchType = currentSearchType
+          )
+        } else {
+          Column(
             modifier = Modifier
-              .fillMaxWidth()
-              .padding(8.dp),
-            contentAlignment = Alignment.TopStart
+              .padding(paddingValues)
+              .fillMaxSize()
           ) {
-            IconButton(onClick = { scope.launch { drawerState.close() } }) {
-              Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Close Drawer",
-                tint = Color.White
+            TabRow(selectedTabIndex = selectedTabIndex) {
+              Tab(
+                selected = selectedTabIndex == 0,
+                onClick = { selectedTabIndex = 0 },
+                text = { Text("Recommended Movies") }
+              )
+              Tab(
+                selected = selectedTabIndex == 1,
+                onClick = { selectedTabIndex = 1 },
+                text = { Text("Recommended Series") }
               )
             }
-          }
 
-          Spacer(modifier = Modifier.height(16.dp)) // Space after the close button
-
-          Text(
-            text = "Navigation",
-            style = MaterialTheme.typography.headlineMedium,
-            color = Color.White,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-          )
-          Divider(color = Color.White)
-          Spacer(modifier = Modifier.height(8.dp))
-          DrawerMenuItem(text = "Home", onClick = { scope.launch { drawerState.close() } })
-          DrawerMenuItem(text = "Profile", onClick = { scope.launch { drawerState.close() } })
-          DrawerMenuItem(text = "Settings", onClick = { scope.launch { drawerState.close() } })
-          DrawerMenuItem(text = "Logout", onClick = { scope.launch { drawerState.close() } })
-        }
-      }
-    },
-    scrimColor = Color.Transparent // Ensures no semi-transparent background is visible when drawer is closed
-  ) {
-    Scaffold(
-      topBar = {
-        MyTopBar(
-          onHamburgerClick = {
-            scope.launch { drawerState.open() }
-          },
-          onSearchQueryChange = { query ->
-            searchQuery = query
-            if (isSearchFocused) {
-              if (currentSearchType == "Movie") {
-                movieViewModel.searchMovies(query)
-              } else {
-                seriesViewModel.searchSeries(query)
-              }
+            when (selectedTabIndex) {
+              0 -> MediaItemList(items = movies, type = "Movie")
+              1 -> MediaItemList(items = series, type = "Series")
             }
-          },
-          onLogoClick = {
-            isSearchFocused = false
-            searchQuery = ""
-          },
-          onSearchFocused = {
-            isSearchFocused = true
-            if (searchQuery.isEmpty()) {
-              // Default to movie search on first focus
-              movieViewModel.searchMovies("default") // Replace "default" with your desired query
-            }
-          }
-        )
-      }
-    ) { paddingValues ->
-      if (isSearchFocused) {
-        SearchView(
-          searchQuery = searchQuery,
-          onBackPressed = { isSearchFocused = false },
-          searchResults = searchResults,
-          onSearchTypeChange = { type ->
-            currentSearchType = type
-            if (searchQuery.isNotEmpty()) {
-              if (type == "Movie") {
-                movieViewModel.searchMovies(searchQuery)
-              } else {
-                seriesViewModel.searchSeries(searchQuery)
-              }
-            }
-          },
-          currentSearchType = currentSearchType
-        )
-      } else {
-        Column(
-          modifier = Modifier
-            .padding(paddingValues)
-            .fillMaxSize()
-        ) {
-          TabRow(selectedTabIndex = selectedTabIndex) {
-            Tab(
-              selected = selectedTabIndex == 0,
-              onClick = { selectedTabIndex = 0 },
-              text = { Text("Recommended Movies") }
-            )
-            Tab(
-              selected = selectedTabIndex == 1,
-              onClick = { selectedTabIndex = 1 },
-              text = { Text("Recommended Series") }
-            )
-          }
-
-          when (selectedTabIndex) {
-            0 -> MediaItemList(items = movies, type = "Movie")
-            1 -> MediaItemList(items = series, type = "Series")
           }
         }
       }
