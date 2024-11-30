@@ -21,7 +21,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import ie.matlesz.mygeekdb.R
+import kotlinx.coroutines.launch
 import java.util.*
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.background
+import androidx.compose.ui.platform.LocalConfiguration
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,6 +101,7 @@ fun MyTopBar(
   )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomePage(
   movieViewModel: MovieViewModel = viewModel(),
@@ -113,76 +118,132 @@ fun HomePage(
 
   val searchResults = if (currentSearchType == "Movie") movieSearchResults else seriesSearchResults
 
-  Scaffold(
-    topBar = {
-      MyTopBar(
-        onHamburgerClick = { println("Hamburger clicked") },
-        onSearchQueryChange = { query ->
-          searchQuery = query
-          if (isSearchFocused) {
-            if (currentSearchType == "Movie") {
-              movieViewModel.searchMovies(query)
-            } else {
-              seriesViewModel.searchSeries(query)
-            }
-          }
-        },
-        onLogoClick = {
-          isSearchFocused = false
-          searchQuery = ""
-        },
-        onSearchFocused = {
-          isSearchFocused = true
-          if (searchQuery.isEmpty()) {
-            // Default to movie search on first focus
-            movieViewModel.searchMovies("default") // Replace "default" with your desired query
-          }
-        }
-      )
-    }
-  ) { paddingValues ->
-    if (isSearchFocused) {
-      SearchView(
-        searchQuery = searchQuery,
-        onBackPressed = { isSearchFocused = false },
-        searchResults = searchResults,
-        onSearchTypeChange = { type ->
-          currentSearchType = type
-          if (searchQuery.isNotEmpty()) {
-            if (type == "Movie") {
-              movieViewModel.searchMovies(searchQuery)
-            } else {
-              seriesViewModel.searchSeries(searchQuery)
-            }
-          }
-        },
-        currentSearchType = currentSearchType
-      )
-    } else {
-      Column(
-        modifier = Modifier
-          .padding(paddingValues)
-          .fillMaxSize()
-      ) {
-        TabRow(selectedTabIndex = selectedTabIndex) {
-          Tab(
-            selected = selectedTabIndex == 0,
-            onClick = { selectedTabIndex = 0 },
-            text = { Text("Recommended Movies") }
-          )
-          Tab(
-            selected = selectedTabIndex == 1,
-            onClick = { selectedTabIndex = 1 },
-            text = { Text("Recommended Series") }
-          )
-        }
+  // Drawer state
+  val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+  val scope = rememberCoroutineScope()
 
-        when (selectedTabIndex) {
-          0 -> MediaItemList(items = movies, type = "Movie")
-          1 -> MediaItemList(items = series, type = "Series")
+  ModalNavigationDrawer(
+    drawerState = drawerState,
+    drawerContent = {
+      // Drawer content with restricted width
+      Box(
+        modifier = Modifier
+          .fillMaxHeight()
+          .width(LocalConfiguration.current.screenWidthDp.dp * 0.75f) // Set width to 3/4 of the screen
+          .background(
+            Brush.verticalGradient(
+              colors = listOf(Color(0xFF6200EE), Color(0xFF03DAC5))
+            )
+          )
+          .padding(16.dp)
+      ) {
+        Column {
+          Text(
+            text = "Navigation",
+            style = MaterialTheme.typography.headlineMedium,
+            color = Color.White,
+            modifier = Modifier.padding(bottom = 16.dp)
+          )
+          Divider(color = Color.White)
+          Spacer(modifier = Modifier.height(8.dp))
+          DrawerMenuItem(text = "Home", onClick = { scope.launch { drawerState.close() } })
+          DrawerMenuItem(text = "Profile", onClick = { scope.launch { drawerState.close() } })
+          DrawerMenuItem(text = "Settings", onClick = { scope.launch { drawerState.close() } })
+          DrawerMenuItem(text = "Logout", onClick = { scope.launch { drawerState.close() } })
+        }
+      }
+    },
+    scrimColor = Color.Transparent // Ensures no semi-transparent background is visible when drawer is closed
+  ) {
+    Scaffold(
+      topBar = {
+        MyTopBar(
+          onHamburgerClick = {
+            scope.launch { drawerState.open() }
+          },
+          onSearchQueryChange = { query ->
+            searchQuery = query
+            if (isSearchFocused) {
+              if (currentSearchType == "Movie") {
+                movieViewModel.searchMovies(query)
+              } else {
+                seriesViewModel.searchSeries(query)
+              }
+            }
+          },
+          onLogoClick = {
+            isSearchFocused = false
+            searchQuery = ""
+          },
+          onSearchFocused = {
+            isSearchFocused = true
+            if (searchQuery.isEmpty()) {
+              // Default to movie search on first focus
+              movieViewModel.searchMovies("default") // Replace "default" with your desired query
+            }
+          }
+        )
+      }
+    ) { paddingValues ->
+      if (isSearchFocused) {
+        SearchView(
+          searchQuery = searchQuery,
+          onBackPressed = { isSearchFocused = false },
+          searchResults = searchResults,
+          onSearchTypeChange = { type ->
+            currentSearchType = type
+            if (searchQuery.isNotEmpty()) {
+              if (type == "Movie") {
+                movieViewModel.searchMovies(searchQuery)
+              } else {
+                seriesViewModel.searchSeries(searchQuery)
+              }
+            }
+          },
+          currentSearchType = currentSearchType
+        )
+      } else {
+        Column(
+          modifier = Modifier
+            .padding(paddingValues)
+            .fillMaxSize()
+        ) {
+          TabRow(selectedTabIndex = selectedTabIndex) {
+            Tab(
+              selected = selectedTabIndex == 0,
+              onClick = { selectedTabIndex = 0 },
+              text = { Text("Recommended Movies") }
+            )
+            Tab(
+              selected = selectedTabIndex == 1,
+              onClick = { selectedTabIndex = 1 },
+              text = { Text("Recommended Series") }
+            )
+          }
+
+          when (selectedTabIndex) {
+            0 -> MediaItemList(items = movies, type = "Movie")
+            1 -> MediaItemList(items = series, type = "Series")
+          }
         }
       }
     }
+  }
+}
+
+@Composable
+fun DrawerMenuItem(text: String, onClick: () -> Unit) {
+  Row(
+    modifier = Modifier
+      .fillMaxWidth()
+      .clickable { onClick() }
+      .padding(12.dp),
+    verticalAlignment = Alignment.CenterVertically
+  ) {
+    Text(
+      text = text,
+      style = MaterialTheme.typography.bodyLarge
+    )
   }
 }
 
