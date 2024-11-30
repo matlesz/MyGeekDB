@@ -30,6 +30,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.material.icons.filled.ArrowBack
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -139,102 +140,57 @@ fun HomePage(
   movieViewModel: MovieViewModel = viewModel(),
   seriesViewModel: SeriesViewModel = viewModel()
 ) {
-  val focusManager = LocalFocusManager.current // Manage focus to dismiss the keyboard
+  // Observables for Movies and Series
   val movies by movieViewModel.movies.observeAsState(emptyList())
   val series by seriesViewModel.series.observeAsState(emptyList())
   val movieSearchResults by movieViewModel.searchResults.observeAsState(emptyList())
   val seriesSearchResults by seriesViewModel.searchResults.observeAsState(emptyList())
+
+  // State variables
   var searchQuery by remember { mutableStateOf("") }
   var selectedTabIndex by remember { mutableStateOf(0) }
   var isSearchFocused by remember { mutableStateOf(false) }
-  var currentSearchType by remember { mutableStateOf("Movie") } // Default to "Movie"
+  var currentSearchType by remember { mutableStateOf("Movie") } // Default search type
+  var selectedItem by remember { mutableStateOf<Any?>(null) }
 
   val searchResults = if (currentSearchType == "Movie") movieSearchResults else seriesSearchResults
-
-  // Drawer state
   val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
   val scope = rememberCoroutineScope()
+  val focusManager = LocalFocusManager.current
 
-  // Add a clickable Box to clear focus on outside touch
-  Box(
-    modifier = Modifier
-      .fillMaxSize()
-      .clickable { focusManager.clearFocus() } // Dismiss the keyboard on click
-  ) {
+  if (selectedItem != null) {
+    // Show Detailed Media View
+    DetailedMediaView(
+      item = selectedItem!!,
+      onBack = { selectedItem = null }
+    )
+  } else {
+    // Main Page Content
     ModalNavigationDrawer(
       drawerState = drawerState,
       drawerContent = {
-        // Drawer content with restricted width
-        Box(
-          modifier = Modifier
-            .fillMaxHeight()
-            .width(LocalConfiguration.current.screenWidthDp.dp * 0.75f) // Set width to 3/4 of the screen
-            .background(
-              Brush.verticalGradient(
-                colors = listOf(Color(0xFF6200EE), Color(0xFF03DAC5))
-              )
-            )
-        ) {
-          Column {
-            Box(
-              modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-              contentAlignment = Alignment.TopStart
-            ) {
-              IconButton(onClick = { scope.launch { drawerState.close() } }) {
-                Icon(
-                  imageVector = Icons.Default.Close,
-                  contentDescription = "Close Drawer",
-                  tint = Color.White
-                )
-              }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-              text = "Navigation",
-              style = MaterialTheme.typography.headlineMedium,
-              color = Color.White,
-              modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-            HorizontalDivider(color = Color.White)
-            Spacer(modifier = Modifier.height(8.dp))
-            // Home Button Implementation
-            DrawerMenuItem(
-              text = "Home",
-              onClick = {
-                scope.launch {
-                  drawerState.close() // Close the drawer
-                }
-                // Reset states to show the home screen
-                isSearchFocused = false
-                selectedTabIndex = 0 // Show "Recommended Movies" tab
-                searchQuery = "" // Clear any active search
-              }
-            )
-            DrawerMenuItem(text = "About", onClick = { /* Handle About Navigation */ })
-            DrawerMenuItem(text = "Logout", onClick = { /* Handle Logout */ })
+        DrawerContent(
+          onCloseDrawer = { scope.launch { drawerState.close() } },
+          onHomeClick = {
+            isSearchFocused = false
+            searchQuery = ""
+            selectedTabIndex = 0
+            scope.launch { drawerState.close() }
           }
-        }
-      },
-      scrimColor = Color.Transparent // Ensures no semi-transparent background is visible when drawer is closed
+        )
+      }
     ) {
       Scaffold(
         topBar = {
           MyTopBar(
-            onHamburgerClick = {
-              scope.launch { drawerState.open() }
-            },
+            onHamburgerClick = { scope.launch { drawerState.open() } },
             onSearchQueryChange = { query ->
               searchQuery = query
               isSearchFocused = true
-              if (isSearchFocused) {
-                if (currentSearchType == "Movie") {
-                  movieViewModel.searchMovies(query)
-                } else {
-                  seriesViewModel.searchSeries(query)
-                }
+              if (currentSearchType == "Movie") {
+                movieViewModel.searchMovies(query)
+              } else {
+                seriesViewModel.searchSeries(query)
               }
             },
             onLogoClick = {
@@ -243,15 +199,19 @@ fun HomePage(
             },
             onSearchFocused = {
               isSearchFocused = true
-              if (searchQuery.isEmpty()) {
-                // Default to movie search on first focus
-                movieViewModel.searchMovies("default") // Replace "default" with your desired query
+              if (searchQuery.isNotEmpty()) {
+                if (currentSearchType == "Movie") {
+                  movieViewModel.searchMovies(searchQuery)
+                } else {
+                  seriesViewModel.searchSeries(searchQuery)
+                }
               }
             }
           )
         }
       ) { paddingValues ->
         if (isSearchFocused) {
+          // Search Results View
           SearchView(
             searchQuery = searchQuery,
             onBackPressed = { isSearchFocused = false },
@@ -266,9 +226,11 @@ fun HomePage(
                 }
               }
             },
-            currentSearchType = currentSearchType
+            currentSearchType = currentSearchType,
+            onItemClick = { item -> selectedItem = item }
           )
         } else {
+          // Recommended Movies/Series View
           Column(
             modifier = Modifier
               .padding(paddingValues)
@@ -288,13 +250,62 @@ fun HomePage(
             }
 
             when (selectedTabIndex) {
-              0 -> MediaItemList(items = movies, type = "Movie")
-              1 -> MediaItemList(items = series, type = "Series")
+              0 -> MediaItemList(
+                items = movies,
+                type = "Movie",
+                onItemClick = { movie -> selectedItem = movie }
+              )
+              1 -> MediaItemList(
+                items = series,
+                type = "Series",
+                onItemClick = { series -> selectedItem = series }
+              )
             }
           }
         }
       }
     }
+  }
+}
+
+@Composable
+fun DrawerContent(onCloseDrawer: () -> Unit, onHomeClick: () -> Unit) {
+  Column(
+    modifier = Modifier
+      .fillMaxHeight()
+      .width(LocalConfiguration.current.screenWidthDp.dp * 0.75f)
+      .background(
+        Brush.verticalGradient(
+          colors = listOf(Color(0xFF6200EE), Color(0xFF03DAC5))
+        )
+      )
+  ) {
+    IconButton(
+      onClick = { onCloseDrawer() },
+      modifier = Modifier
+        .padding(8.dp)
+        .align(Alignment.Start)
+    ) {
+      Icon(
+        imageVector = Icons.Default.Close,
+        contentDescription = "Close Drawer",
+        tint = Color.White
+      )
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+    Text(
+      text = "Navigation",
+      style = MaterialTheme.typography.headlineMedium,
+      color = Color.White,
+      modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+    )
+    Divider(color = Color.White)
+
+    DrawerMenuItem(text = "Home") { onHomeClick() }
+    DrawerMenuItem(text = "Favourite") { /* Add Favourite Logic */ }
+    DrawerMenuItem(text = "About") { /* Add About Logic */ }
+    DrawerMenuItem(text = "Logout") { /* Add Logout Logic */ }
   }
 }
 
@@ -321,7 +332,8 @@ fun SearchView(
   onBackPressed: () -> Unit,
   searchResults: List<Any>, // Accepts both Movie and Series
   onSearchTypeChange: (String) -> Unit, // Callback to change search type
-  currentSearchType: String // Current search type ("Movie" or "Series")
+  currentSearchType: String, // Current search type ("Movie" or "Series")
+  onItemClick: (Any) -> Unit // Callback for item click
 ) {
   Scaffold(
     topBar = {
@@ -329,19 +341,18 @@ fun SearchView(
         navigationIcon = {
           IconButton(onClick = { onBackPressed() }) {
             Icon(
-              imageVector = Icons.Default.Menu,
+              imageVector = Icons.Default.ArrowBack,
               contentDescription = "Back"
             )
           }
         },
         title = { Text("Search Results") },
-        colors = TopAppBarDefaults.topAppBarColors( // Updated here
+        colors = TopAppBarDefaults.topAppBarColors(
           containerColor = MaterialTheme.colorScheme.primary
         )
       )
     }
   ) { paddingValues ->
-    // Content for SearchView
     Column(
       modifier = Modifier
         .padding(paddingValues)
@@ -396,7 +407,8 @@ fun SearchView(
                 title = movie.title,
                 overview = movie.overview,
                 posterPath = movie.posterPath,
-                voteAverage = movie.voteAverage
+                voteAverage = movie.voteAverage,
+                onClick = { onItemClick(movie) } // Pass the click action
               )
             } else {
               val series = result as Series
@@ -404,7 +416,8 @@ fun SearchView(
                 title = series.title,
                 overview = series.overview,
                 posterPath = series.posterPath,
-                voteAverage = series.voteAverage
+                voteAverage = series.voteAverage,
+                onClick = { onItemClick(series) } // Pass the click action
               )
             }
           }
@@ -415,31 +428,35 @@ fun SearchView(
 }
 
 @Composable
-fun <T> MediaItemList(items: List<T>, type: String) {
-  LazyColumn(
-    modifier = Modifier.fillMaxSize(),
-    contentPadding = PaddingValues(16.dp),
-    verticalArrangement = Arrangement.spacedBy(8.dp)
-  ) {
+fun <T> MediaItemList(
+  items: List<T>,
+  type: String,
+  onItemClick: (T) -> Unit
+) {
+  LazyColumn {
     items(items) { item ->
-      when (type) {
-        "Movie" -> {
-          val movie = item as? Movie ?: return@items
+      when {
+        type == "Movie" && item is Movie -> {
           MediaItem(
-            title = movie.title,
-            overview = movie.overview,
-            posterPath = movie.posterPath,
-            voteAverage = movie.voteAverage
+            title = item.title,
+            overview = item.overview,
+            posterPath = item.posterPath,
+            voteAverage = item.voteAverage,
+            onClick = { onItemClick(item) } // Pass the movie to the click handler
           )
         }
-        "Series" -> {
-          val series = item as? Series ?: return@items
+        type == "Series" && item is Series -> {
           MediaItem(
-            title = series.title,
-            overview = series.overview,
-            posterPath = series.posterPath,
-            voteAverage = series.voteAverage
+            title = item.title,
+            overview = item.overview,
+            posterPath = item.posterPath,
+            voteAverage = item.voteAverage,
+            onClick = { onItemClick(item) } // Pass the series to the click handler
           )
+        }
+        else -> {
+          // Handle unexpected item type
+          throw IllegalArgumentException("Unsupported item type")
         }
       }
     }
@@ -451,13 +468,15 @@ fun MediaItem(
   title: String?,
   overview: String?,
   posterPath: String?,
-  voteAverage: Double?
+  voteAverage: Double?,
+  onClick: () -> Unit // Add onClick callback
 ) {
   Card(
     modifier = Modifier
       .fillMaxWidth()
       .wrapContentHeight()
-      .padding(vertical = 4.dp),
+      .padding(vertical = 4.dp)
+      .clickable { onClick() }, // Make the Card clickable
     elevation = CardDefaults.cardElevation(4.dp)
   ) {
     Row(
@@ -508,6 +527,59 @@ fun MediaItem(
           )
         }
       }
+    }
+  }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DetailedMediaView(item: Any, onBack: () -> Unit) {
+  Scaffold(
+    topBar = {
+      TopAppBar(
+        title = { Text("Details") },
+        navigationIcon = {
+          IconButton(onClick = { onBack() }) {
+            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+          }
+        }
+      )
+    }
+  ) { paddingValues ->
+    Column(
+      modifier = Modifier
+        .padding(paddingValues)
+        .fillMaxSize()
+        .padding(16.dp),
+      verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+      val title = when (item) {
+        is Movie -> item.title
+        is Series -> item.title
+        else -> "Unknown"
+      }
+      val overview = when (item) {
+        is Movie -> item.overview
+        is Series -> item.overview
+        else -> "No description available"
+      }
+      val posterPath = when (item) {
+        is Movie -> item.posterPath
+        is Series -> item.posterPath
+        else -> null
+      }
+
+      Image(
+        painter = rememberAsyncImagePainter(posterPath ?: ""),
+        contentDescription = "Poster of $title",
+        modifier = Modifier
+          .fillMaxWidth()
+          .height(200.dp)
+          .clip(RoundedCornerShape(12.dp))
+      )
+
+      Text(text = title ?: "No Title", style = MaterialTheme.typography.headlineMedium)
+      Text(text = overview ?: "No Overview", style = MaterialTheme.typography.bodyLarge)
     }
   }
 }
