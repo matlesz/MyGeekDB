@@ -7,6 +7,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,13 +17,75 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MyTopBar(
+  onHamburgerClick: () -> Unit,
+  onSearchQueryChange: (String) -> Unit,
+  onLogoClick: () -> Unit
+) {
+  var searchQuery by remember { mutableStateOf("") }
+
+  TopAppBar(
+    title = { /* Empty since the search bar is custom */ },
+    navigationIcon = {
+      Icon(
+        imageVector = Icons.Default.Menu,
+        contentDescription = "Menu",
+        modifier = Modifier
+          .size(24.dp)
+          .clickable { onHamburgerClick() }
+      )
+    },
+    actions = {
+      // Pill-shaped Search Bar
+      TextField(
+        value = searchQuery,
+        onValueChange = { query ->
+          searchQuery = query
+          onSearchQueryChange(query)
+        },
+        placeholder = { Text(text = "Search...", fontSize = 14.sp) },
+        leadingIcon = {
+          Icon(
+            imageVector = Icons.Default.Search,
+            contentDescription = "Search Icon"
+          )
+        },
+        modifier = Modifier
+          .weight(1f)
+          .padding(horizontal = 16.dp)
+          .height(40.dp),
+        shape = MaterialTheme.shapes.large,
+        colors = TextFieldDefaults.textFieldColors(
+          containerColor = Color.LightGray,
+          focusedIndicatorColor = Color.Transparent,
+          unfocusedIndicatorColor = Color.Transparent
+        )
+      )
+
+      // Clickable Logo
+      Text(
+        text = "MyGeekDB",
+        fontWeight = FontWeight.Bold,
+        fontSize = 16.sp,
+        color = Color.Black,
+        modifier = Modifier.clickable { onLogoClick() }
+      )
+    },
+    modifier = Modifier.fillMaxWidth(),
+    colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color.White)
+  )
+}
+
 @Composable
 fun MovieScreen(
   movieViewModel: MovieViewModel = viewModel(),
@@ -29,12 +93,21 @@ fun MovieScreen(
 ) {
   val movies by movieViewModel.movies.observeAsState(emptyList())
   val series by seriesViewModel.series.observeAsState(emptyList())
-
   var selectedTabIndex by remember { mutableStateOf(0) }
 
   Scaffold(
     topBar = {
-      TopAppBar(title = { Text("MyGeekDB") }) // Only this title will remain
+      MyTopBar(
+        onHamburgerClick = {
+          println("Hamburger clicked")
+        },
+        onSearchQueryChange = { query ->
+          println("Search Query: $query")
+        },
+        onLogoClick = {
+          println("Navigating to home screen")
+        }
+      )
     }
   ) { paddingValues ->
     Column(
@@ -47,12 +120,12 @@ fun MovieScreen(
         Tab(
           selected = selectedTabIndex == 0,
           onClick = { selectedTabIndex = 0 },
-          text = { Text("Recommended Movies") } // No "MyGeekDB" here
+          text = { Text("Recommended Movies") }
         )
         Tab(
           selected = selectedTabIndex == 1,
           onClick = { selectedTabIndex = 1 },
-          text = { Text("Recommended Series") } // No "MyGeekDB" here
+          text = { Text("Recommended Series") }
         )
       }
 
@@ -94,95 +167,95 @@ fun MovieScreen(
   }
 }
 
-@Composable
-fun MediaItem(
-  title: String,
-  overview: String,
-  posterPath: String,
-  voteAverage: Double
-) {
-  Card(
-    modifier = Modifier
-      .fillMaxWidth()
-      .wrapContentHeight()
-      .padding(vertical = 4.dp),
-    elevation = CardDefaults.cardElevation(4.dp)
+  @Composable
+  fun MediaItem(
+    title: String?,
+    overview: String?,
+    posterPath: String?,
+    voteAverage: Double?
   ) {
-    Row(
+    Card(
       modifier = Modifier
-        .padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 8.dp)
-        .fillMaxWidth(),
-      verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.spacedBy(8.dp)
+        .fillMaxWidth()
+        .wrapContentHeight()
+        .padding(vertical = 4.dp),
+      elevation = CardDefaults.cardElevation(4.dp)
     ) {
-      // Poster
-      Image(
-        painter = rememberAsyncImagePainter(posterPath),
-        contentDescription = "Poster of $title",
+      Row(
         modifier = Modifier
-          .size(100.dp)
-          .clip(RoundedCornerShape(12.dp))
-      )
-
-      // Details Column
-      Column(
-        modifier = Modifier
-          .weight(1f)
-          .fillMaxHeight()
+          .padding(8.dp)
+          .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
       ) {
-        // Title
-        Text(
-          text = title,
-          style = MaterialTheme.typography.titleMedium,
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis
+        // Poster
+        Image(
+          painter = rememberAsyncImagePainter(posterPath ?: ""),
+          contentDescription = "Poster of $title",
+          modifier = Modifier
+            .size(100.dp)
+            .clip(RoundedCornerShape(12.dp))
         )
 
-        // Overview
-        Text(
-          text = overview,
-          style = MaterialTheme.typography.bodySmall,
-          maxLines = 3,
-          overflow = TextOverflow.Ellipsis,
-          modifier = Modifier.padding(top = 4.dp)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Vote Average and Favorite Button
-        Row(
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.SpaceBetween,
-          modifier = Modifier.fillMaxWidth()
+        // Details Column
+        Column(
+          modifier = Modifier
+            .weight(1f)
+            .fillMaxHeight()
         ) {
-          // Vote Average with Thumbs Up Icon
-          Row(verticalAlignment = Alignment.CenterVertically) {
+          // Title
+          Text(
+            text = title ?: "No Title",
+            style = MaterialTheme.typography.titleMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+          )
+
+          // Overview
+          Text(
+            text = overview ?: "No Overview",
+            style = MaterialTheme.typography.bodySmall,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 4.dp)
+          )
+
+          Spacer(modifier = Modifier.height(8.dp))
+
+          // Vote Average and Favorite Button
+          Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            // Vote Average with Thumbs Up Icon
+            Row(verticalAlignment = Alignment.CenterVertically) {
+              Icon(
+                imageVector = Icons.Default.ThumbUp,
+                contentDescription = "Vote Average",
+                modifier = Modifier.size(20.dp)
+              )
+              Text(
+                text = String.format(Locale.US, "%.1f", voteAverage ?: 0.0),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(start = 4.dp)
+              )
+            }
+
+            // Favorite Button
+            var isFavorite by remember { mutableStateOf(false) }
             Icon(
-              imageVector = Icons.Default.ThumbUp,
-              contentDescription = "Vote Average",
-              modifier = Modifier.size(20.dp)
-            )
-            Text(
-              text = String.format(Locale.US, "%.1f", voteAverage),
-              style = MaterialTheme.typography.bodyMedium,
-              modifier = Modifier.padding(start = 4.dp)
+              imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+              contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+              tint = if (isFavorite) Color.Red else Color.Gray,
+              modifier = Modifier
+                .size(20.dp)
+                .clickable {
+                  isFavorite = !isFavorite
+                }
             )
           }
-
-          // Favorite Button
-          var isFavorite by remember { mutableStateOf(false) }
-          Icon(
-            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-            contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
-            tint = if (isFavorite) Color.Red else Color.Gray,
-            modifier = Modifier
-              .size(20.dp)
-              .clickable {
-                isFavorite = !isFavorite
-              }
-          )
         }
       }
     }
   }
-}
