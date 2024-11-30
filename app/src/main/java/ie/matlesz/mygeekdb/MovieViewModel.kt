@@ -53,9 +53,11 @@ class MovieViewModel : ViewModel() {
                 val movieJson = it.getJSONObject(i)
                 val title = movieJson.optString("title", "N/A")
                 val overview = movieJson.optString("overview", "N/A")
-                val baseImageUrl = "https://image.tmdb.org/t/p/w500" // Replace with the correct base URL from the API docs
-                val posterPath = movieJson.optString("poster_path", null)?.let { "$baseImageUrl$it" } ?: "https://example.com/placeholder.jpg"
-                val voteAverage = movieJson.optDouble("vote_average", 0.0) // Extract vote_average
+                val baseImageUrl = "https://image.tmdb.org/t/p/w500"
+                val posterPath = movieJson.optString("poster_path", "").let {
+                  if (it.isNotEmpty()) "$baseImageUrl$it" else "android.resource://ie.matlesz.mygeekdb/drawable/placeholder_image"
+                }
+                val voteAverage = movieJson.optDouble("vote_average", 0.0)
                 movieList.add(Movie(title, overview, posterPath, thumbsUp = 0, voteAverage = voteAverage))
               }
             }

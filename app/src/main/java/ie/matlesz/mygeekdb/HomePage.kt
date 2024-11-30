@@ -67,29 +67,29 @@ fun MovieItem(movie: Movie) {
       modifier = Modifier
         .padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 8.dp)
         .fillMaxWidth(),
-      verticalAlignment = Alignment.CenterVertically, // Align items vertically to center
-      horizontalArrangement = Arrangement.spacedBy(7.dp) // Adjust spacing as needed
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(7.dp)
     ) {
       // Movie Poster
       Box(
         modifier = Modifier
           .weight(0.3f)
           .fillMaxHeight(),
-        contentAlignment = Alignment.Center // Centers the poster inside its box
+        contentAlignment = Alignment.Center
       ) {
         Image(
           painter = rememberAsyncImagePainter(movie.posterPath),
           contentDescription = "Poster of ${movie.title}",
           modifier = Modifier
-            .size(100.dp) // Adjust size to fit design
-            .clip(RoundedCornerShape(12.dp)) // Rounded corners
+            .size(100.dp)
+            .clip(RoundedCornerShape(12.dp))
         )
       }
 
       // Movie Details
       Column(
         modifier = Modifier
-          .weight(0.7f) // Adjust weight to give space to details
+          .weight(0.7f)
           .fillMaxHeight()
       ) {
         // Title
