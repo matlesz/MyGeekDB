@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 import java.util.*
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.background
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.platform.LocalConfiguration
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -135,14 +136,31 @@ fun HomePage(
               colors = listOf(Color(0xFF6200EE), Color(0xFF03DAC5))
             )
           )
-          .padding(16.dp)
       ) {
         Column {
+          // Close Button at the top-left
+          Box(
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(8.dp),
+            contentAlignment = Alignment.TopStart
+          ) {
+            IconButton(onClick = { scope.launch { drawerState.close() } }) {
+              Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Close Drawer",
+                tint = Color.White
+              )
+            }
+          }
+
+          Spacer(modifier = Modifier.height(16.dp)) // Space after the close button
+
           Text(
             text = "Navigation",
             style = MaterialTheme.typography.headlineMedium,
             color = Color.White,
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
           )
           Divider(color = Color.White)
           Spacer(modifier = Modifier.height(8.dp))
