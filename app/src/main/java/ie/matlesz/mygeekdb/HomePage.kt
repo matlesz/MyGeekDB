@@ -167,95 +167,95 @@ fun MovieScreen(
   }
 }
 
-  @Composable
-  fun MediaItem(
-    title: String?,
-    overview: String?,
-    posterPath: String?,
-    voteAverage: Double?
+@Composable
+fun MediaItem(
+  title: String?,
+  overview: String?,
+  posterPath: String?,
+  voteAverage: Double?
+) {
+  Card(
+    modifier = Modifier
+      .fillMaxWidth()
+      .wrapContentHeight()
+      .padding(vertical = 4.dp),
+    elevation = CardDefaults.cardElevation(4.dp)
   ) {
-    Card(
+    Row(
       modifier = Modifier
-        .fillMaxWidth()
-        .wrapContentHeight()
-        .padding(vertical = 4.dp),
-      elevation = CardDefaults.cardElevation(4.dp)
+        .padding(8.dp)
+        .fillMaxWidth(),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-      Row(
+      // Poster
+      Image(
+        painter = rememberAsyncImagePainter(posterPath ?: ""),
+        contentDescription = "Poster of $title",
         modifier = Modifier
-          .padding(8.dp)
-          .fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+          .size(100.dp)
+          .clip(RoundedCornerShape(12.dp))
+      )
+
+      // Details Column
+      Column(
+        modifier = Modifier
+          .weight(1f)
+          .fillMaxHeight()
       ) {
-        // Poster
-        Image(
-          painter = rememberAsyncImagePainter(posterPath ?: ""),
-          contentDescription = "Poster of $title",
-          modifier = Modifier
-            .size(100.dp)
-            .clip(RoundedCornerShape(12.dp))
+        // Title
+        Text(
+          text = title ?: "No Title",
+          style = MaterialTheme.typography.titleMedium,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis
         )
 
-        // Details Column
-        Column(
-          modifier = Modifier
-            .weight(1f)
-            .fillMaxHeight()
+        // Overview
+        Text(
+          text = overview ?: "No Overview",
+          style = MaterialTheme.typography.bodySmall,
+          maxLines = 3,
+          overflow = TextOverflow.Ellipsis,
+          modifier = Modifier.padding(top = 4.dp)
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Vote Average and Favorite Button
+        Row(
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.SpaceBetween,
+          modifier = Modifier.fillMaxWidth()
         ) {
-          // Title
-          Text(
-            text = title ?: "No Title",
-            style = MaterialTheme.typography.titleMedium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-          )
-
-          // Overview
-          Text(
-            text = overview ?: "No Overview",
-            style = MaterialTheme.typography.bodySmall,
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 4.dp)
-          )
-
-          Spacer(modifier = Modifier.height(8.dp))
-
-          // Vote Average and Favorite Button
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
-          ) {
-            // Vote Average with Thumbs Up Icon
-            Row(verticalAlignment = Alignment.CenterVertically) {
-              Icon(
-                imageVector = Icons.Default.ThumbUp,
-                contentDescription = "Vote Average",
-                modifier = Modifier.size(20.dp)
-              )
-              Text(
-                text = String.format(Locale.US, "%.1f", voteAverage ?: 0.0),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(start = 4.dp)
-              )
-            }
-
-            // Favorite Button
-            var isFavorite by remember { mutableStateOf(false) }
+          // Vote Average with Thumbs Up Icon
+          Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
-              imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-              contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
-              tint = if (isFavorite) Color.Red else Color.Gray,
-              modifier = Modifier
-                .size(20.dp)
-                .clickable {
-                  isFavorite = !isFavorite
-                }
+              imageVector = Icons.Default.ThumbUp,
+              contentDescription = "Vote Average",
+              modifier = Modifier.size(20.dp)
+            )
+            Text(
+              text = String.format(Locale.US, "%.1f", voteAverage ?: 0.0),
+              style = MaterialTheme.typography.bodyMedium,
+              modifier = Modifier.padding(start = 4.dp)
             )
           }
+
+          // Favorite Button
+          var isFavorite by remember { mutableStateOf(false) }
+          Icon(
+            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+            contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+            tint = if (isFavorite) Color.Red else Color.Gray,
+            modifier = Modifier
+              .size(20.dp)
+              .clickable {
+                isFavorite = !isFavorite
+              }
+          )
         }
       }
     }
   }
+}
