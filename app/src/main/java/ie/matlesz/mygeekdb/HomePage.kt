@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import java.util.Locale
+import ie.matlesz.mygeekdb.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,48 +42,60 @@ fun MyTopBar(
         imageVector = Icons.Default.Menu,
         contentDescription = "Menu",
         modifier = Modifier
-          .size(24.dp)
+          .size(50.dp)
+          .padding(12.dp) // Adjust padding for proper alignment
           .clickable { onHamburgerClick() }
       )
     },
     actions = {
       // Pill-shaped Search Bar
-      TextField(
-        value = searchQuery,
-        onValueChange = { query ->
-          searchQuery = query
-          onSearchQueryChange(query)
-        },
-        placeholder = { Text(text = "Search...", fontSize = 14.sp) },
-        leadingIcon = {
-          Icon(
-            imageVector = Icons.Default.Search,
-            contentDescription = "Search Icon"
-          )
-        },
+      Box(
         modifier = Modifier
-          .weight(1f)
-          .padding(horizontal = 16.dp)
-          .height(40.dp),
-        shape = MaterialTheme.shapes.large,
-        colors = TextFieldDefaults.textFieldColors(
-          containerColor = Color.LightGray,
-          focusedIndicatorColor = Color.Transparent,
-          unfocusedIndicatorColor = Color.Transparent
+          .width(300.dp) // Adjusted width of the search bar
+          .padding(horizontal = 20.dp) // Adjust padding to maintain spacing
+      ) {
+        TextField(
+          value = searchQuery,
+          onValueChange = { query ->
+            searchQuery = query
+            onSearchQueryChange(query)
+          },
+          placeholder = { Text(text = "Search...", fontSize = 14.sp) },
+          leadingIcon = {
+            Icon(
+              imageVector = Icons.Default.Search,
+              contentDescription = "Search Icon"
+            )
+          },
+          modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp), // Adjust height for a larger clickable area
+          shape = RoundedCornerShape(24.dp), // Ensures the pill-shaped appearance
+          colors = TextFieldDefaults.textFieldColors(
+            containerColor = Color.LightGray,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent
+          )
         )
-      )
+      }
 
-      // Clickable Logo
-      Text(
-        text = "MyGeekDB",
-        fontWeight = FontWeight.Bold,
-        fontSize = 16.sp,
-        color = Color.Black,
-        modifier = Modifier.clickable { onLogoClick() }
+      // Replace Text with Logo Image
+      Image(
+        painter = rememberAsyncImagePainter(model = R.drawable.logo),
+        contentDescription = "App Logo",
+        modifier = Modifier
+          .size(40.dp) // Adjust size of the logo
+          .padding(end = 16.dp) // Add padding to the right of the logo
+          .clickable { onLogoClick() }
       )
     },
     modifier = Modifier.fillMaxWidth(),
-    colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color.White)
+    colors = TopAppBarDefaults.smallTopAppBarColors(
+      containerColor = Color.White,
+      titleContentColor = Color.Black,
+      navigationIconContentColor = Color.Black,
+      actionIconContentColor = Color.Black
+    )
   )
 }
 
