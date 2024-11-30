@@ -30,7 +30,10 @@ fun DetailedMediaView(item: Any, onBack: () -> Unit) {
         title = { Text("Details") },
         navigationIcon = {
           IconButton(onClick = { onBack() }) {
-            Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+            Icon(
+              imageVector = Icons.Filled.ArrowBack, // Updated arrow
+              contentDescription = "Back"
+            )
           }
         }
       )
@@ -58,9 +61,25 @@ fun DetailedMediaView(item: Any, onBack: () -> Unit) {
         is Series -> item.posterPath
         else -> null
       }
+      val voteAverage = when (item) {
+        is Movie -> item.voteAverage
+        is Series -> item.voteAverage
+        else -> null
+      }
+      val voteCount = when (item) {
+        is Movie -> item.voteCount
+        is Series -> item.voteCount
+        else -> null
+      }
+      val popularity = when (item) {
+        is Movie -> item.popularity
+        is Series -> item.popularity
+        else -> null
+      }
 
+      // Display poster
       Image(
-        painter = rememberAsyncImagePainter(posterPath ?: ""),
+        painter = rememberAsyncImagePainter(posterPath),
         contentDescription = "Poster of $title",
         modifier = Modifier
           .fillMaxWidth()
@@ -68,8 +87,35 @@ fun DetailedMediaView(item: Any, onBack: () -> Unit) {
           .clip(RoundedCornerShape(12.dp))
       )
 
-      Text(text = title ?: "No Title", style = MaterialTheme.typography.headlineMedium)
-      Text(text = overview ?: "No Overview", style = MaterialTheme.typography.bodyLarge)
+      // Display title
+      Text(text = title, style = MaterialTheme.typography.headlineMedium)
+
+      // Display overview
+      Text(text = overview, style = MaterialTheme.typography.bodyLarge)
+
+      // Display vote average
+      if (voteAverage != null) {
+        Text(
+          text = "Vote Average: $voteAverage",
+          style = MaterialTheme.typography.bodyMedium
+        )
+      }
+
+      // Display vote count
+      if (voteCount != null) {
+        Text(
+          text = "Vote Count: $voteCount",
+          style = MaterialTheme.typography.bodyMedium
+        )
+      }
+
+      // Display popularity
+      if (popularity != null) {
+        Text(
+          text = "Popularity: $popularity",
+          style = MaterialTheme.typography.bodyMedium
+        )
+      }
     }
   }
 }

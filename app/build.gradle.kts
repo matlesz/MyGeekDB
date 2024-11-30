@@ -79,29 +79,27 @@ dependencies {
   debugImplementation(libs.androidx.ui.tooling)
   debugImplementation(libs.androidx.ui.test.manifest)
   implementation("app.moviebase:tmdb-api:1.4.0")
-  implementation ("com.squareup.okhttp3:okhttp:4.10.0")
+  implementation ("com.squareup.okhttp3:okhttp:4.12.0")
   implementation ("org.json:json:20210307")
   // Jetpack Compose Core
-  implementation ("androidx.compose.ui:ui:1.5.1")
-  implementation ("androidx.compose.material3:material3:1.2.0")
+  implementation ("androidx.compose.ui:ui:1.7.5")
+  implementation ("androidx.compose.material3:material3:1.3.1")
 
 // Compose LiveData and ViewModel
-  implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
-  implementation ("androidx.compose.runtime:runtime-livedata:1.5.1")
+  implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+  implementation ("androidx.compose.runtime:runtime-livedata:1.7.5")
 
 // Compose Tooling (for previews)
-  implementation ("androidx.compose.ui:ui-tooling-preview:1.5.1")
-  debugImplementation ("androidx.compose.ui:ui-tooling:1.5.1")
+  implementation ("androidx.compose.ui:ui-tooling-preview:1.7.5")
+  debugImplementation ("androidx.compose.ui:ui-tooling:1.7.5")
 
 // Compose Activity
-  implementation ("androidx.activity:activity-compose:1.7.2")
-  implementation ("androidx.compose.ui:ui:1.5.1")
-  implementation ("androidx.compose.material3:material3:1.1.1")
-  implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
-  implementation ("androidx.compose.runtime:runtime-livedata:1.5.1")
+  implementation ("androidx.activity:activity-compose:1.9.3")
+  implementation ("androidx.compose.ui:ui:1.7.5")
+  implementation ("androidx.compose.material3:material3:1.3.1")
+  implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+  implementation ("androidx.compose.runtime:runtime-livedata:1.7.5")
   implementation("io.coil-kt:coil-compose:2.2.2")
-  implementation ("androidx.compose.material:material-icons-extended:1.3.1")
-
-  
+  implementation ("androidx.compose.material:material-icons-extended:1.7.5")
 
 }

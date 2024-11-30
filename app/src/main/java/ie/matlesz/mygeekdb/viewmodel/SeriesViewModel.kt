@@ -10,6 +10,7 @@ import org.json.JSONObject
 import android.util.Log
 import ie.matlesz.mygeekdb.BuildConfig
 
+
 class SeriesViewModel : ViewModel() {
 
   private val _series = MutableLiveData<List<Series>>() // Holds recommended series
@@ -49,6 +50,7 @@ class SeriesViewModel : ViewModel() {
             seriesJsonArray?.let {
               for (i in 0 until it.length()) {
                 val seriesJson = it.getJSONObject(i)
+                val id = seriesJson.optInt("id", -1)
                 val title = seriesJson.optString("name", "N/A") // "name" is used for TV series
                 val overview = seriesJson.optString("overview", "N/A")
                 val baseImageUrl = "https://image.tmdb.org/t/p/w500"
@@ -56,7 +58,21 @@ class SeriesViewModel : ViewModel() {
                   if (it.isNotEmpty()) "$baseImageUrl$it" else "android.resource://ie.matlesz.mygeekdb/drawable/placeholder_image"
                 }
                 val voteAverage = seriesJson.optDouble("vote_average", 0.0)
-                seriesList.add(Series(title, overview, posterPath, voteAverage))
+                val voteCount = seriesJson.optInt("vote_count", 0)
+                val popularity = seriesJson.optDouble("popularity", 0.0)
+
+                seriesList.add(
+                  Series(
+                    id = id,
+                    title = title,
+                    overview = overview,
+                    posterPath = posterPath,
+                    thumbsUp = 0,
+                    voteAverage = voteAverage,
+                    voteCount = voteCount,
+                    popularity = popularity
+                  )
+                )
               }
             }
 
@@ -100,14 +116,29 @@ class SeriesViewModel : ViewModel() {
             seriesJsonArray?.let {
               for (i in 0 until it.length()) {
                 val seriesJson = it.getJSONObject(i)
+                val id = seriesJson.optInt("id", -1)
                 val title = seriesJson.optString("name", "N/A")
                 val overview = seriesJson.optString("overview", "N/A")
                 val baseImageUrl = "https://image.tmdb.org/t/p/w500"
                 val posterPath = seriesJson.optString("poster_path", "").let {
-                  if (it.isNotEmpty()) "$baseImageUrl$it" else "android.resource://ie.matlesz/mygeekdb/drawable/placeholder_image"
+                  if (it.isNotEmpty()) "$baseImageUrl$it" else "android.resource://ie.matlesz.mygeekdb/drawable/placeholder_image"
                 }
                 val voteAverage = seriesJson.optDouble("vote_average", 0.0)
-                seriesList.add(Series(title, overview, posterPath, voteAverage))
+                val voteCount = seriesJson.optInt("vote_count", 0)
+                val popularity = seriesJson.optDouble("popularity", 0.0)
+
+                seriesList.add(
+                  Series(
+                    id = id,
+                    title = title,
+                    overview = overview,
+                    posterPath = posterPath,
+                    thumbsUp = 0,
+                    voteAverage = voteAverage,
+                    voteCount = voteCount,
+                    popularity = popularity
+                  )
+                )
               }
             }
 

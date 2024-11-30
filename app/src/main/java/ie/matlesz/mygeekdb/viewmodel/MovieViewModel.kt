@@ -1,14 +1,14 @@
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import ie.matlesz.mygeekdb.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
-import android.util.Log
-import ie.matlesz.mygeekdb.BuildConfig
 
 class MovieViewModel : ViewModel() {
 
@@ -48,9 +48,10 @@ class MovieViewModel : ViewModel() {
             val moviesJsonArray = json.optJSONArray("results")
             val movieList = mutableListOf<Movie>()
 
-            moviesJsonArray?.let {
-              for (i in 0 until it.length()) {
-                val movieJson = it.getJSONObject(i)
+            if (moviesJsonArray != null) {
+              for (i in 0 until moviesJsonArray.length()) {
+                val movieJson = moviesJsonArray.getJSONObject(i)
+                val id = movieJson.optInt("id", -1).toString()
                 val title = movieJson.optString("title", "N/A")
                 val overview = movieJson.optString("overview", "N/A")
                 val baseImageUrl = "https://image.tmdb.org/t/p/w500"
@@ -58,18 +59,34 @@ class MovieViewModel : ViewModel() {
                   if (it.isNotEmpty()) "$baseImageUrl$it" else "android.resource://ie.matlesz.mygeekdb/drawable/placeholder_image"
                 }
                 val voteAverage = movieJson.optDouble("vote_average", 0.0)
-                movieList.add(Movie(title, overview, posterPath, thumbsUp = 0, voteAverage = voteAverage))
+                val voteCount = movieJson.optInt("vote_count", 0)
+                val popularity = movieJson.optDouble("popularity", 0.0)
+
+                movieList.add(
+                  Movie(
+                    id = id,
+                    title = title,
+                    overview = overview,
+                    posterPath = posterPath,
+                    thumbsUp = 0,
+                    voteAverage = voteAverage,
+                    voteCount = voteCount,
+                    popularity = popularity
+                  )
+                )
               }
+            } else {
+              Log.e("MovieViewModel", "No 'results' array in API response.")
             }
 
-            Log.d("MovieViewModel", "Fetched recommended movies: ${movieList.size}")
+            Log.d("MovieViewModel", "Fetched ${movieList.size} recommended movies.")
             _movies.postValue(movieList)
           }
         } else {
-          Log.e("MovieViewModel", "Recommendations request failed: ${response.code}, ${response.message}")
+          Log.e("MovieViewModel", "Failed to fetch recommendations: ${response.code}, ${response.message}")
         }
       } catch (e: Exception) {
-        Log.e("MovieViewModel", "Exception during recommendations fetch: ${e.message}", e)
+        Log.e("MovieViewModel", "Exception during fetchMovieRecommendations: ${e.message}", e)
       }
     }
   }
@@ -107,6 +124,7 @@ class MovieViewModel : ViewModel() {
             moviesJsonArray?.let {
               for (i in 0 until it.length()) {
                 val movieJson = it.getJSONObject(i)
+                val id = movieJson.optInt("id", -1).toString() // Convert Int to String
                 val title = movieJson.optString("title", "N/A")
                 val overview = movieJson.optString("overview", "N/A")
                 val baseImageUrl = "https://image.tmdb.org/t/p/w500"
@@ -114,7 +132,21 @@ class MovieViewModel : ViewModel() {
                   if (it.isNotEmpty()) "$baseImageUrl$it" else "android.resource://ie.matlesz.mygeekdb/drawable/placeholder_image"
                 }
                 val voteAverage = movieJson.optDouble("vote_average", 0.0)
-                movieList.add(Movie(title, overview, posterPath, thumbsUp = 0, voteAverage = voteAverage))
+                val voteCount = movieJson.optInt("vote_count", 0)
+                val popularity = movieJson.optDouble("popularity", 0.0)
+
+                movieList.add(
+                  Movie(
+                    id = id,
+                    title = title,
+                    overview = overview,
+                    posterPath = posterPath,
+                    thumbsUp = 0,
+                    voteAverage = voteAverage,
+                    voteCount = voteCount,
+                    popularity = popularity
+                  )
+                )
               }
             }
 
