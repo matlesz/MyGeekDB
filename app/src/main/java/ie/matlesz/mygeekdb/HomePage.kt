@@ -201,9 +201,20 @@ fun HomePage(
             )
             HorizontalDivider(color = Color.White)
             Spacer(modifier = Modifier.height(8.dp))
-            DrawerMenuItem(text = "Home", onClick = { /* Handle Home Navigation */ })
-            DrawerMenuItem(text = "Profile", onClick = { /* Handle Profile Navigation */ })
-            DrawerMenuItem(text = "Settings", onClick = { /* Handle Settings Navigation */ })
+            // Home Button Implementation
+            DrawerMenuItem(
+              text = "Home",
+              onClick = {
+                scope.launch {
+                  drawerState.close() // Close the drawer
+                }
+                // Reset states to show the home screen
+                isSearchFocused = false
+                selectedTabIndex = 0 // Show "Recommended Movies" tab
+                searchQuery = "" // Clear any active search
+              }
+            )
+            DrawerMenuItem(text = "About", onClick = { /* Handle About Navigation */ })
             DrawerMenuItem(text = "Logout", onClick = { /* Handle Logout */ })
           }
         }
