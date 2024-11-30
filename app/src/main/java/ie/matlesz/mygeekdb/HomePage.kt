@@ -30,7 +30,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.semantics.SemanticsProperties.ImeAction
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -336,12 +335,13 @@ fun SearchView(
           }
         },
         title = { Text("Search Results") },
-        colors = TopAppBarDefaults.smallTopAppBarColors(
+        colors = TopAppBarDefaults.topAppBarColors( // Updated here
           containerColor = MaterialTheme.colorScheme.primary
         )
       )
     }
   ) { paddingValues ->
+    // Content for SearchView
     Column(
       modifier = Modifier
         .padding(paddingValues)
