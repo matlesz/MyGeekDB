@@ -34,7 +34,7 @@ fun MovieScreen(
 
   Scaffold(
     topBar = {
-      TopAppBar(title = { Text("MyGeekDB") })
+      TopAppBar(title = { Text("MyGeekDB") }) // Only this title will remain
     }
   ) { paddingValues ->
     Column(
@@ -42,16 +42,17 @@ fun MovieScreen(
         .padding(paddingValues)
         .fillMaxSize()
     ) {
+      // TabRow for movies and series
       TabRow(selectedTabIndex = selectedTabIndex) {
         Tab(
           selected = selectedTabIndex == 0,
           onClick = { selectedTabIndex = 0 },
-          text = { Text("Recommended Movies") }
+          text = { Text("Recommended Movies") } // No "MyGeekDB" here
         )
         Tab(
           selected = selectedTabIndex == 1,
           onClick = { selectedTabIndex = 1 },
-          text = { Text("Recommended Series") }
+          text = { Text("Recommended Series") } // No "MyGeekDB" here
         )
       }
 
