@@ -1,6 +1,6 @@
 package ie.matlesz.mygeekdb
 
-import MovieScreen
+import HomePage
 import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
         Scaffold(
           modifier = Modifier.fillMaxSize(),
           content = {
-            MovieScreen()
+            HomePage()
           }
         )
       }

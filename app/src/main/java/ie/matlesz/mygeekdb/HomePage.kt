@@ -25,72 +25,70 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import java.util.Locale
 import ie.matlesz.mygeekdb.R
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBarDefaults
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyTopBar(
   onHamburgerClick: () -> Unit,
+  searchQuery: String,
   onSearchQueryChange: (String) -> Unit,
   onLogoClick: () -> Unit
 ) {
-  var searchQuery by remember { mutableStateOf("") }
-
   TopAppBar(
-    title = { /* Empty since the search bar is custom */ },
+    title = { Text("") }, // Empty Text for the title
     navigationIcon = {
       Icon(
         imageVector = Icons.Default.Menu,
-        contentDescription = "Menu",
+        contentDescription = "Hamburger Menu",
         modifier = Modifier
           .size(50.dp)
-          .padding(12.dp) // Adjust padding for proper alignment
+          .padding(12.dp)
           .clickable { onHamburgerClick() }
       )
     },
     actions = {
-      // Pill-shaped Search Bar
       Box(
         modifier = Modifier
-          .width(300.dp) // Adjusted width of the search bar
-          .padding(horizontal = 20.dp) // Adjust padding to maintain spacing
+          .width(300.dp)
+          .padding(horizontal = 8.dp)
       ) {
         TextField(
           value = searchQuery,
-          onValueChange = { query ->
-            searchQuery = query
-            onSearchQueryChange(query)
-          },
-          placeholder = { Text(text = "Search...", fontSize = 14.sp) },
+          onValueChange = onSearchQueryChange,
+          placeholder = { Text(text = "Search...", style = MaterialTheme.typography.bodySmall) },
           leadingIcon = {
             Icon(
               imageVector = Icons.Default.Search,
               contentDescription = "Search Icon"
             )
           },
+          shape = RoundedCornerShape(24.dp),
+          colors = TextFieldDefaults.colors(
+            focusedContainerColor = Color.LightGray,
+            unfocusedContainerColor = Color.LightGray,
+            disabledContainerColor = Color.LightGray,
+            errorContainerColor = Color.Red,
+            cursorColor = Color.Black,
+            errorCursorColor = Color.Red
+          ),
           modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp), // Adjust height for a larger clickable area
-          shape = RoundedCornerShape(24.dp), // Ensures the pill-shaped appearance
-          colors = TextFieldDefaults.textFieldColors(
-            containerColor = Color.LightGray,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent
-          )
+            .height(50.dp)
         )
       }
-
-      // Replace Text with Logo Image
       Image(
-        painter = rememberAsyncImagePainter(model = R.drawable.logo),
-        contentDescription = "App Logo",
+        painter = rememberAsyncImagePainter(R.drawable.logo),
+        contentDescription = "Logo",
         modifier = Modifier
-          .size(40.dp) // Adjust size of the logo
-          .padding(end = 16.dp) // Add padding to the right of the logo
+          .size(50.dp)
+          .padding(end = 16.dp)
           .clickable { onLogoClick() }
       )
     },
-    modifier = Modifier.fillMaxWidth(),
-    colors = TopAppBarDefaults.smallTopAppBarColors(
+    colors = TopAppBarDefaults.topAppBarColors(
       containerColor = Color.White,
       titleContentColor = Color.Black,
       navigationIconContentColor = Color.Black,
@@ -100,50 +98,41 @@ fun MyTopBar(
 }
 
 @Composable
-fun MovieScreen(
-  movieViewModel: MovieViewModel = viewModel(),
-  seriesViewModel: SeriesViewModel = viewModel()
+fun HomePage(
+  movieViewModel: MovieViewModel = viewModel()
 ) {
   val movies by movieViewModel.movies.observeAsState(emptyList())
-  val series by seriesViewModel.series.observeAsState(emptyList())
+  val searchResults by movieViewModel.searchResults.observeAsState(emptyList())
+  var searchQuery by remember { mutableStateOf("") }
   var selectedTabIndex by remember { mutableStateOf(0) }
+
+  val isSearching = searchQuery.isNotEmpty()
 
   Scaffold(
     topBar = {
       MyTopBar(
-        onHamburgerClick = {
-          println("Hamburger clicked")
+        onHamburgerClick = { println("Hamburger clicked") },
+        searchQuery = searchQuery,
+        onSearchQueryChange = {
+          searchQuery = it
+          movieViewModel.searchMovies(it) // Trigger search on query change
         },
-        onSearchQueryChange = { query ->
-          println("Search Query: $query")
-        },
-        onLogoClick = {
-          println("Navigating to home screen")
-        }
+        onLogoClick = { println("Logo clicked") }
       )
     }
   ) { paddingValues ->
-    Column(
-      modifier = Modifier
-        .padding(paddingValues)
-        .fillMaxSize()
-    ) {
-      // TabRow for movies and series
-      TabRow(selectedTabIndex = selectedTabIndex) {
-        Tab(
-          selected = selectedTabIndex == 0,
-          onClick = { selectedTabIndex = 0 },
-          text = { Text("Recommended Movies") }
-        )
-        Tab(
-          selected = selectedTabIndex == 1,
-          onClick = { selectedTabIndex = 1 },
-          text = { Text("Recommended Series") }
-        )
-      }
+    Column(modifier = Modifier.padding(paddingValues)) {
+      if (!isSearching) {
+        // Show tabs for recommended movies and series when not searching
+        TabRow(selectedTabIndex = selectedTabIndex) {
+          Tab(
+            selected = selectedTabIndex == 0,
+            onClick = { selectedTabIndex = 0 },
+            text = { Text("Recommended Movies") }
+          )
+        }
 
-      when (selectedTabIndex) {
-        0 -> {
+        if (selectedTabIndex == 0) {
           LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
@@ -159,20 +148,20 @@ fun MovieScreen(
             }
           }
         }
-        1 -> {
-          LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-          ) {
-            items(series) { seriesItem ->
-              MediaItem(
-                title = seriesItem.title,
-                overview = seriesItem.overview,
-                posterPath = seriesItem.posterPath,
-                voteAverage = seriesItem.voteAverage
-              )
-            }
+      } else {
+        // Show search results
+        LazyColumn(
+          modifier = Modifier.fillMaxSize(),
+          contentPadding = PaddingValues(16.dp),
+          verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+          items(searchResults) { movie ->
+            MediaItem(
+              title = movie.title,
+              overview = movie.overview,
+              posterPath = movie.posterPath,
+              voteAverage = movie.voteAverage
+            )
           }
         }
       }
