@@ -10,13 +10,6 @@ import org.json.JSONObject
 import android.util.Log
 import ie.matlesz.mygeekdb.BuildConfig
 
-data class Series(
-  val title: String,
-  val overview: String,
-  val posterPath: String,
-  val voteAverage: Double
-)
-
 class SeriesViewModel : ViewModel() {
 
   private val _series = MutableLiveData<List<Series>>() // Holds recommended series

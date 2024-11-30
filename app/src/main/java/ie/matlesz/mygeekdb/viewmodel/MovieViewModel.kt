@@ -10,14 +10,6 @@ import org.json.JSONObject
 import android.util.Log
 import ie.matlesz.mygeekdb.BuildConfig
 
-data class Movie(
-  val title: String,
-  val overview: String,
-  val posterPath: String,
-  val thumbsUp: Int,
-  val voteAverage: Double
-)
-
 class MovieViewModel : ViewModel() {
 
   // LiveData to hold recommended movies
