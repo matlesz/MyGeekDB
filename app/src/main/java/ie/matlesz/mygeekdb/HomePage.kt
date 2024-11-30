@@ -42,6 +42,7 @@ fun MyTopBar(
   onSearchFocused: () -> Unit
 ) {
   var searchQuery by remember { mutableStateOf("") }
+  val focusManager = LocalFocusManager.current
 
   TopAppBar(
     title = { /* Empty since we use a custom search bar */ },
@@ -60,6 +61,10 @@ fun MyTopBar(
         modifier = Modifier
           .width(300.dp)
           .padding(horizontal = 20.dp)
+          .clickable { // Dismiss keyboard and clear focus on outside click
+            focusManager.clearFocus()
+            searchQuery = "" // Clear the text field
+          }
       ) {
         TextField(
           value = searchQuery,
@@ -73,10 +78,24 @@ fun MyTopBar(
               contentDescription = "Search Icon"
             )
           },
+          trailingIcon = {
+            if (searchQuery.isNotEmpty()) {
+              IconButton(
+                onClick = {
+                  searchQuery = "" // Clear the text field
+                }
+              ) {
+                Icon(
+                  imageVector = Icons.Default.Close,
+                  contentDescription = "Clear Search",
+                  tint = Color.Gray // Optional: Adjust color
+                )
+              }
+            }
+          },
           modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp)
-            .clickable { onSearchFocused() }, // Handle search focus
+            .height(48.dp),
           shape = RoundedCornerShape(24.dp),
           colors = TextFieldDefaults.colors(
             focusedContainerColor = Color.LightGray,
@@ -85,12 +104,11 @@ fun MyTopBar(
             unfocusedIndicatorColor = Color.Transparent
           ),
           keyboardOptions = KeyboardOptions.Default.copy(
-            imeAction = androidx.compose.ui.text.input.ImeAction.Search // IME action for search
+            imeAction = androidx.compose.ui.text.input.ImeAction.Search
           ),
           keyboardActions = KeyboardActions(
             onSearch = {
-              // Trigger the search action
-              onSearchQueryChange(searchQuery.trim()) // Ensure trimmed query is sent
+              onSearchQueryChange(searchQuery.trim()) // Trigger search
             }
           ),
           maxLines = 1
