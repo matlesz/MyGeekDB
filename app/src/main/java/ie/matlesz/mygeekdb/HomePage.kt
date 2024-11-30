@@ -27,29 +27,72 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MovieScreen(movieViewModel: MovieViewModel = viewModel()) {
+fun MovieScreen(
+  movieViewModel: MovieViewModel = viewModel(),
+  seriesViewModel: SeriesViewModel = viewModel() // Add a new ViewModel for series
+) {
   val movies by movieViewModel.movies.observeAsState(emptyList())
+  val series by seriesViewModel.series.observeAsState(emptyList())
 
-  LaunchedEffect(movies) {
+  var selectedTabIndex by remember { mutableStateOf(0) } // State to manage selected tab
+
+  LaunchedEffect(movies, series) {
     Log.d("MovieScreen", "Movies received: ${movies.size}")
+    Log.d("SeriesScreen", "Series received: ${series.size}")
   }
 
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Recommended Movies") }
+        title = { Text("MyGeekDB") }
       )
     }
   ) { paddingValues ->
-    LazyColumn(
+    Column(
       modifier = Modifier
         .padding(paddingValues)
-        .fillMaxSize(),
-      contentPadding = PaddingValues(16.dp),
-      verticalArrangement = Arrangement.spacedBy(8.dp)
+        .fillMaxSize()
     ) {
-      items(movies) { movie ->
-        MovieItem(movie)
+      // Tabs for "Movies" and "Series"
+      TabRow(selectedTabIndex = selectedTabIndex) {
+        Tab(
+          selected = selectedTabIndex == 0,
+          onClick = { selectedTabIndex = 0 },
+          text = { Text("Recommended Movies") }
+        )
+        Tab(
+          selected = selectedTabIndex == 1,
+          onClick = { selectedTabIndex = 1 },
+          text = { Text("Recommended Series") }
+        )
+      }
+
+      // Show content based on selected tab
+      when (selectedTabIndex) {
+        0 -> {
+          // Movies
+          LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+          ) {
+            items(movies) { movie ->
+              MovieItem(movie)
+            }
+          }
+        }
+        1 -> {
+          // Series
+          LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+          ) {
+            items(series) { seriesItem ->
+              SeriesItem(seriesItem)
+            }
+          }
+        }
       }
     }
   }
@@ -143,6 +186,64 @@ fun MovieItem(movie: Movie) {
               }
           )
         }
+      }
+    }
+  }
+}
+
+@Composable
+fun SeriesItem(series: Series) {
+  Card(
+    modifier = Modifier
+      .fillMaxWidth()
+      .wrapContentHeight(),
+    elevation = CardDefaults.cardElevation(4.dp)
+  ) {
+    Row(
+      modifier = Modifier
+        .padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 8.dp)
+        .fillMaxWidth(),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(7.dp)
+    ) {
+      // Series Poster
+      Box(
+        modifier = Modifier
+          .weight(0.3f)
+          .fillMaxHeight(),
+        contentAlignment = Alignment.Center
+      ) {
+        Image(
+          painter = rememberAsyncImagePainter(series.posterPath),
+          contentDescription = "Poster of ${series.title}",
+          modifier = Modifier
+            .size(100.dp)
+            .clip(RoundedCornerShape(12.dp))
+        )
+      }
+
+      // Series Details
+      Column(
+        modifier = Modifier
+          .weight(0.7f)
+          .fillMaxHeight()
+      ) {
+        // Title
+        Text(
+          text = series.title,
+          style = MaterialTheme.typography.titleMedium,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis
+        )
+
+        // Overview (Restricted to 3 lines)
+        Text(
+          text = series.overview,
+          style = MaterialTheme.typography.bodySmall,
+          maxLines = 3,
+          overflow = TextOverflow.Ellipsis,
+          modifier = Modifier.padding(top = 4.dp)
+        )
       }
     }
   }
