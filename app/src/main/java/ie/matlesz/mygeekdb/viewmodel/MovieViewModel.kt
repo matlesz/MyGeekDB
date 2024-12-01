@@ -15,7 +15,7 @@ class MovieViewModel : ViewModel() {
   // LiveData to hold recommended movies
   private val _movies = MutableLiveData<List<Movie>>()
   val movies: LiveData<List<Movie>> = _movies
-
+  val favorites: LiveData<List<Any>> = MutableLiveData()
   // LiveData to hold search results
   private val _searchResults = MutableLiveData<List<Movie>>()
   val searchResults: LiveData<List<Movie>> = _searchResults

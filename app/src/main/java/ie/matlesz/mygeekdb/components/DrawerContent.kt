@@ -23,7 +23,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun DrawerContent(onCloseDrawer: () -> Unit, onHomeClick: () -> Unit) {
+fun DrawerContent(
+  onCloseDrawer: () -> Unit,
+  onHomeClick: () -> Unit,
+//  onFavoritesClick: () -> Unit
+) {
   val activity = LocalContext.current as? Activity
 
   Column(
@@ -59,7 +63,7 @@ fun DrawerContent(onCloseDrawer: () -> Unit, onHomeClick: () -> Unit) {
     HorizontalDivider(color = Color.White) // Updated to use HorizontalDivider
 
     DrawerMenuItem(text = "Home") { onHomeClick() }
-    DrawerMenuItem(text = "Favourite") { /* Add Favourite Logic */ }
+//    DrawerMenuItem(text = "Favorites") { onFavoritesClick() } // Redirect to Favorites
     DrawerMenuItem(text = "About") { /* Add About Logic */ }
     DrawerMenuItem(text = "Logout") { activity?.finishAffinity() } // Closes the app
   }

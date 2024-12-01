@@ -15,7 +15,7 @@ class SeriesViewModel : ViewModel() {
 
   private val _series = MutableLiveData<List<Series>>() // Holds recommended series
   val series: LiveData<List<Series>> = _series
-
+  val favorites: LiveData<List<Any>> = MutableLiveData()
   private val _searchResults = MutableLiveData<List<Series>>() // Holds search results
   val searchResults: LiveData<List<Series>> = _searchResults
 

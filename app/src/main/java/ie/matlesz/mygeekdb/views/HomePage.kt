@@ -17,6 +17,9 @@ fun HomePage(
   // Observables for Movies and Series
   val movies by movieViewModel.movies.observeAsState(emptyList())
   val series by seriesViewModel.series.observeAsState(emptyList())
+  val favorites by movieViewModel.favorites.observeAsState(emptyList()) // Add a favorites state
+//  val favorites by seriesViewModel.favorites.observeAsState(emptyList()) // Add a favorites state
+
   val movieSearchResults by movieViewModel.searchResults.observeAsState(emptyList())
   val seriesSearchResults by seriesViewModel.searchResults.observeAsState(emptyList())
 
@@ -51,6 +54,7 @@ fun HomePage(
             selectedTabIndex = 0
             scope.launch { drawerState.close() }
           }
+//          onFavoritesClick = { navController.navigate("favorites") }
         )
       }
     ) {
@@ -127,6 +131,11 @@ fun HomePage(
                 onClick = { selectedTabIndex = 1 },
                 text = { Text("Recommended Series") }
               )
+              Tab(
+                selected = selectedTabIndex == 2,
+                onClick = { selectedTabIndex = 2 },
+                text = { Text("Favorites") }
+              )
             }
 
             when (selectedTabIndex) {
@@ -142,6 +151,17 @@ fun HomePage(
                 onItemClick = { series -> selectedItem = series },
                 onFavoriteClick = { series -> seriesViewModel.toggleFavorite(series) } // Pass callback
               )
+              2 -> MediaItemList(
+                items = favorites,
+                type = "Favorites",
+                onItemClick = { item -> selectedItem = item },
+                onFavoriteClick = { item ->
+                  when (item) {
+                    is Movie -> movieViewModel.toggleFavorite(item)
+                    is Series -> seriesViewModel.toggleFavorite(item)
+                  }
+                }
+              )
             }
           }
         }
@@ -149,6 +169,11 @@ fun HomePage(
     }
   }
 }
+
+
+
+
+
 
 
 
