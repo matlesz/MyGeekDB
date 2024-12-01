@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <style name="Theme.MyGeekDB.Splash" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="windowSplashScreenBackground">@color/common_google_signin_btn_text_dark</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
+    </style>
+
     <style name="Theme.MyGeekDB" parent="android:Theme.Material.Light.NoActionBar" />
 </resources>
