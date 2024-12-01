@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
@@ -31,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import java.util.Locale
+import androidx.compose.material.icons.outlined.FavoriteBorder
 
 @Composable
 fun MediaItem(
@@ -40,7 +42,7 @@ fun MediaItem(
   voteAverage: Double?,
   onClick: () -> Unit,
   onFavoriteClick: () -> Unit,
-  isFavorite: Boolean // Pass the favorite state as a plain Boolean
+  isFavorite: Boolean
 ) {
   Card(
     modifier = Modifier
@@ -106,7 +108,7 @@ fun MediaItem(
           IconButton(onClick = onFavoriteClick) {
             Icon(
               imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-              contentDescription = "Favorite"
+              contentDescription = if (isFavorite) "Unmark as Favorite" else "Mark as Favorite"
             )
           }
         }

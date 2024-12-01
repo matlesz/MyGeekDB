@@ -17,9 +17,8 @@ fun HomePage(
   // Observables for Movies and Series
   val movies by movieViewModel.movies.observeAsState(emptyList())
   val series by seriesViewModel.series.observeAsState(emptyList())
-  val favorites by movieViewModel.favorites.observeAsState(emptyList()) // Add a favorites state
-//  val favorites by seriesViewModel.favorites.observeAsState(emptyList()) // Add a favorites state
 
+  val favoriteMovies by movieViewModel.favorites.observeAsState(emptyList())
   val movieSearchResults by movieViewModel.searchResults.observeAsState(emptyList())
   val seriesSearchResults by seriesViewModel.searchResults.observeAsState(emptyList())
 
@@ -143,27 +142,34 @@ fun HomePage(
                 items = movies,
                 type = "Movie",
                 onItemClick = { movie -> selectedItem = movie },
-                onFavoriteClick = { movie -> movieViewModel.toggleFavorite(movie) } // Pass callback
+                onFavoriteClick = { movie -> movieViewModel.toggleFavorite(movie) },
+           //     isFavorite = item.isFavorite // Provide the isFavorite lambda
+
               )
+
               1 -> MediaItemList(
                 items = series,
                 type = "Series",
                 onItemClick = { series -> selectedItem = series },
-                onFavoriteClick = { series -> seriesViewModel.toggleFavorite(series) } // Pass callback
+                onFavoriteClick = { series -> seriesViewModel.toggleFavorite(series) },
+//                isFavorite = { series ->
+//                  favoriteSeries.contains(series)
+//                }
               )
+
               2 -> FavoritesView(
-                favoriteItems = listOf(), // Provide your favorite movies and series
-                currentFavoriteType = "Movie",
-                onFavoriteTypeChange = { newType ->
-                  // Handle type change (e.g., update ViewModel state)
+                favoriteItems = favoriteMovies.filterIsInstance<Movie>(), // Ensure it filters to Movie type
+                currentFavoriteType = currentSearchType, // or "Movie" as default
+                onFavoriteTypeChange = { type ->
+                  currentSearchType = type
+                  // Trigger fetching favorites for the selected type if needed
                 },
                 onItemClick = { item ->
-                  // Handle item click
+                  if (item is Movie) selectedItem = item // Ensure type is Movie
                 },
-                onFavoriteClick = { item ->
-                  // Handle favorite toggle
+                onFavoriteClick = { movie ->
+                  if (movie is Movie) movieViewModel.toggleFavorite(movie) // Ensure type safety
                 }
-
               )
             }
           }

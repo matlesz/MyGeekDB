@@ -114,6 +114,7 @@ dependencies {
   implementation ("androidx.compose.material:material-icons-extended:1.7.5")
   implementation ("androidx.navigation:navigation-compose:2.6.0-alpha01")
 
+
   //firebase
   implementation(platform("com.google.firebase:firebase-bom:33.6.0"))
   implementation("com.google.firebase:firebase-analytics")

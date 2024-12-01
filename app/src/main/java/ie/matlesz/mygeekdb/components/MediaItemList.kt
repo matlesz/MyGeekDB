@@ -19,8 +19,8 @@ fun <T> MediaItemList(
             posterPath = item.posterPath,
             voteAverage = item.voteAverage,
             isFavorite = item.isFavorite,
-            onClick = { onItemClick(item) }, // Pass the movie to the click handler
-            onFavoriteClick = { onFavoriteClick(item) } // Pass the movie to the favorite handler
+            onClick = { onItemClick(item) },
+            onFavoriteClick = { onFavoriteClick(item) }
           )
         }
         type == "Series" && item is Series -> {
@@ -29,7 +29,7 @@ fun <T> MediaItemList(
             overview = item.overview,
             posterPath = item.posterPath,
             voteAverage = item.voteAverage,
-            isFavorite = item.isFavorite,
+            isFavorite = item.isFavorite, // Dynamically set favorite state
             onClick = { onItemClick(item) }, // Pass the series to the click handler
             onFavoriteClick = { onFavoriteClick(item) } // Pass the series to the favorite handler
           )

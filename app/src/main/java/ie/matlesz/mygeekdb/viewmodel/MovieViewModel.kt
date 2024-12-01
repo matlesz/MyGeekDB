@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ie.matlesz.mygeekdb.BuildConfig
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -15,10 +17,34 @@ class MovieViewModel : ViewModel() {
   // LiveData to hold recommended movies
   private val _movies = MutableLiveData<List<Movie>>()
   val movies: LiveData<List<Movie>> = _movies
-  val favorites: LiveData<List<Any>> = MutableLiveData()
   // LiveData to hold search results
   private val _searchResults = MutableLiveData<List<Movie>>()
   val searchResults: LiveData<List<Movie>> = _searchResults
+
+  private val _favorites = MutableLiveData<List<Movie>>(emptyList())
+  val favorites: LiveData<List<Movie>> = _favorites
+
+  fun toggleFavorite(movie: Movie) {
+    _favorites.value = if (_favorites.value?.contains(movie) == true) {
+      _favorites.value?.minus(movie)
+    } else {
+      _favorites.value?.plus(movie)
+    }
+  }
+
+  fun isFavorite(movie: Movie): Boolean {
+    return _favorites.value?.contains(movie) == true
+  }
+
+//  private fun addFavorite(movie: Movie) {
+//    // Add to favorites list and update state
+//    _favorites.value = _favorites.value.orEmpty() + movie
+//  }
+//
+//  private fun removeFavorite(movie: Movie) {
+//    // Remove from favorites list and update state
+//    _favorites.value = _favorites.value.orEmpty() - movie
+//  }
 
   init {
     fetchMovieRecommendations() // Load recommendations on initialization
@@ -90,16 +116,7 @@ class MovieViewModel : ViewModel() {
       }
     }
   }
-  fun toggleFavorite(movie: Movie) {
-    // Update the favorite status directly in the LiveData list
-    _movies.value = _movies.value?.map {
-      if (it.id == movie.id) {
-        it.copy(isFavorite = !it.isFavorite)
-      } else {
-        it
-      }
-    }
-  }
+
   /**
    * Search movies by query.
    * @param query The search query string.
