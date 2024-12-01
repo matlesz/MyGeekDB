@@ -1,3 +1,4 @@
+import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -18,10 +19,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun DrawerContent(onCloseDrawer: () -> Unit, onHomeClick: () -> Unit) {
+  val activity = LocalContext.current as? Activity
+
   Column(
     modifier = Modifier
       .fillMaxHeight()
@@ -57,6 +61,6 @@ fun DrawerContent(onCloseDrawer: () -> Unit, onHomeClick: () -> Unit) {
     DrawerMenuItem(text = "Home") { onHomeClick() }
     DrawerMenuItem(text = "Favourite") { /* Add Favourite Logic */ }
     DrawerMenuItem(text = "About") { /* Add About Logic */ }
-    DrawerMenuItem(text = "Logout") { /* Add Logout Logic */ }
+    DrawerMenuItem(text = "Logout") { activity?.finishAffinity() } // Closes the app
   }
 }
