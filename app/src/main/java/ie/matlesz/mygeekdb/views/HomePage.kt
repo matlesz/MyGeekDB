@@ -151,16 +151,19 @@ fun HomePage(
                 onItemClick = { series -> selectedItem = series },
                 onFavoriteClick = { series -> seriesViewModel.toggleFavorite(series) } // Pass callback
               )
-              2 -> MediaItemList(
-                items = favorites,
-                type = "Favorites",
-                onItemClick = { item -> selectedItem = item },
+              2 -> FavoritesView(
+                favoriteItems = listOf(), // Provide your favorite movies and series
+                currentFavoriteType = "Movie",
+                onFavoriteTypeChange = { newType ->
+                  // Handle type change (e.g., update ViewModel state)
+                },
+                onItemClick = { item ->
+                  // Handle item click
+                },
                 onFavoriteClick = { item ->
-                  when (item) {
-                    is Movie -> movieViewModel.toggleFavorite(item)
-                    is Series -> seriesViewModel.toggleFavorite(item)
-                  }
+                  // Handle favorite toggle
                 }
+
               )
             }
           }
