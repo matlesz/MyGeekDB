@@ -4,7 +4,7 @@ plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.compose)
-//  id("com.github.hierynomus.env") version "0.4"
+  id("com.google.gms.google-services")
 
 }
 
@@ -101,5 +101,9 @@ dependencies {
   implementation ("androidx.compose.runtime:runtime-livedata:1.7.5")
   implementation("io.coil-kt:coil-compose:2.2.2")
   implementation ("androidx.compose.material:material-icons-extended:1.7.5")
+
+  //firebase
+  implementation(platform("com.google.firebase:firebase-bom:33.6.0"))
+  implementation("com.google.firebase:firebase-analytics")
 
 }

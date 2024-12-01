@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "650051430718",
+    "project_id": "mygeekdb",
+    "storage_bucket": "mygeekdb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:650051430718:android:5a4610b577a6b6a99ba46f",
+        "android_client_info": {
+          "package_name": "ie.matlesz.mygeekdb"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "650051430718-9bojs56h2uf9l23cq0pqtbnv8df240ui.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ie.matlesz.mygeekdb",
+            "certificate_hash": "b79270d6f22d3219ede1b3b210e5a97048561e51"
+          }
+        },
+        {
+          "client_id": "650051430718-pmn0cmbiifg4atmh2vn4nr31sg20oadn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDkkibe49X28BDYbigolmjoteeWWUJJ58A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "650051430718-pmn0cmbiifg4atmh2vn4nr31sg20oadn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
