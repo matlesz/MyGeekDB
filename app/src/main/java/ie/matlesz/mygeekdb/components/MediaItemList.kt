@@ -6,7 +6,8 @@ import androidx.compose.runtime.Composable
 fun <T> MediaItemList(
   items: List<T>,
   type: String,
-  onItemClick: (T) -> Unit
+  onItemClick: (T) -> Unit,
+  onFavoriteClick: (T) -> Unit // Add this new parameter
 ) {
   LazyColumn {
     items(items) { item ->
@@ -17,7 +18,9 @@ fun <T> MediaItemList(
             overview = item.overview,
             posterPath = item.posterPath,
             voteAverage = item.voteAverage,
-            onClick = { onItemClick(item) } // Pass the movie to the click handler
+            isFavorite = item.isFavorite,
+            onClick = { onItemClick(item) }, // Pass the movie to the click handler
+            onFavoriteClick = { onFavoriteClick(item) } // Pass the movie to the favorite handler
           )
         }
         type == "Series" && item is Series -> {
@@ -26,7 +29,9 @@ fun <T> MediaItemList(
             overview = item.overview,
             posterPath = item.posterPath,
             voteAverage = item.voteAverage,
-            onClick = { onItemClick(item) } // Pass the series to the click handler
+            isFavorite = item.isFavorite,
+            onClick = { onItemClick(item) }, // Pass the series to the click handler
+            onFavoriteClick = { onFavoriteClick(item) } // Pass the series to the favorite handler
           )
         }
         else -> {

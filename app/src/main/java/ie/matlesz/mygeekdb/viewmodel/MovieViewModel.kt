@@ -90,7 +90,16 @@ class MovieViewModel : ViewModel() {
       }
     }
   }
-
+  fun toggleFavorite(movie: Movie) {
+    // Update the favorite status directly in the LiveData list
+    _movies.value = _movies.value?.map {
+      if (it.id == movie.id) {
+        it.copy(isFavorite = !it.isFavorite)
+      } else {
+        it
+      }
+    }
+  }
   /**
    * Search movies by query.
    * @param query The search query string.

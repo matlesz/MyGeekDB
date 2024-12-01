@@ -101,7 +101,13 @@ fun HomePage(
               }
             },
             currentSearchType = currentSearchType,
-            onItemClick = { item -> selectedItem = item }
+            onItemClick = { item -> selectedItem = item },
+            onFavoriteClick = { item ->
+              when (item) {
+                is Movie -> movieViewModel.toggleFavorite(item)
+                is Series -> seriesViewModel.toggleFavorite(item)
+              }
+            }
           )
         } else {
           // Recommended Movies/Series View
@@ -127,12 +133,14 @@ fun HomePage(
               0 -> MediaItemList(
                 items = movies,
                 type = "Movie",
-                onItemClick = { movie -> selectedItem = movie }
+                onItemClick = { movie -> selectedItem = movie },
+                onFavoriteClick = { movie -> movieViewModel.toggleFavorite(movie) } // Pass callback
               )
               1 -> MediaItemList(
                 items = series,
                 type = "Series",
-                onItemClick = { series -> selectedItem = series }
+                onItemClick = { series -> selectedItem = series },
+                onFavoriteClick = { series -> seriesViewModel.toggleFavorite(series) } // Pass callback
               )
             }
           }

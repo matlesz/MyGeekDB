@@ -31,7 +31,8 @@ fun SearchView(
   searchResults: List<Any>, // Accepts both Movie and Series
   onSearchTypeChange: (String) -> Unit, // Callback to change search type
   currentSearchType: String, // Current search type ("Movie" or "Series")
-  onItemClick: (Any) -> Unit // Callback for item click
+  onItemClick: (Any) -> Unit, // Callback for item click
+  onFavoriteClick: (Any) -> Unit // Callback for favorite click
 ) {
   Scaffold(
     topBar = {
@@ -106,7 +107,9 @@ fun SearchView(
                 overview = movie.overview,
                 posterPath = movie.posterPath,
                 voteAverage = movie.voteAverage,
-                onClick = { onItemClick(movie) } // Pass the click action
+                isFavorite = movie.isFavorite,
+                onClick = { onItemClick(movie) },
+                onFavoriteClick = { onFavoriteClick(movie) }
               )
             } else {
               val series = result as Series
@@ -115,7 +118,9 @@ fun SearchView(
                 overview = series.overview,
                 posterPath = series.posterPath,
                 voteAverage = series.voteAverage,
-                onClick = { onItemClick(series) } // Pass the click action
+                isFavorite = series.isFavorite,
+                onClick = { onItemClick(series) },
+                onFavoriteClick = { onFavoriteClick(series) }
               )
             }
           }

@@ -87,7 +87,16 @@ class SeriesViewModel : ViewModel() {
       }
     }
   }
-
+  fun toggleFavorite(series: Series) {
+    // Update the favorite status directly in the LiveData list
+    _series.value = _series.value?.map {
+      if (it.id == series.id) {
+        it.copy(isFavorite = !it.isFavorite)
+      } else {
+        it
+      }
+    }
+  }
   /**
    * Search TV series by query.
    * @param query The search query string.

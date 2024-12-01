@@ -6,5 +6,6 @@ data class Movie(
   val thumbsUp: Int,
   val voteAverage: Double,
   val voteCount: Int,
-  val popularity: Double
+  val popularity: Double,
+  val isFavorite: Boolean = false
 )
