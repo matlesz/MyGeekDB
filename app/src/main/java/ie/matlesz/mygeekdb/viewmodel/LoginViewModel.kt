@@ -28,6 +28,10 @@ class LoginViewModel : ViewModel() {
     _loginState.value = LoginState.LoggedOut
   }
 
+  fun clearError() {
+    _loginState.value = LoginState.LoggedOut
+  }
+
   fun login(email: String, password: String) {
     viewModelScope.launch {
       try {

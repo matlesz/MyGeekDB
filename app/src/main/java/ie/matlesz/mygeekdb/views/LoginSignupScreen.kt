@@ -28,6 +28,10 @@ fun LoginSignupScreen(loginViewModel: LoginViewModel = viewModel(), onLoginSucce
     }
   }
 
+  // Add state for error dialog
+  var showError by remember { mutableStateOf(false) }
+  var errorMessage by remember { mutableStateOf("") }
+
   // Show loading or error states
   loginState?.let { state ->
     when (state) {
@@ -36,10 +40,22 @@ fun LoginSignupScreen(loginViewModel: LoginViewModel = viewModel(), onLoginSucce
       }
       is LoginViewModel.LoginState.Error -> {
         AlertDialog(
-                onDismissRequest = {},
-                title = { Text("Error") },
-                text = { Text(state.message) },
-                confirmButton = { TextButton(onClick = {}) { Text("OK") } }
+          onDismissRequest = {
+            showError = false
+            loginViewModel.clearError()
+          },
+          title = { Text("Error") },
+          text = { Text(state.message) },
+          confirmButton = {
+            TextButton(
+              onClick = {
+                showError = false
+                loginViewModel.clearError()
+              }
+            ) {
+              Text("OK")
+            }
+          }
         )
       }
       else -> {}

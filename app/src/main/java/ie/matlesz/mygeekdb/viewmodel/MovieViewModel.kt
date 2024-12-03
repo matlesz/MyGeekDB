@@ -8,16 +8,15 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import ie.matlesz.mygeekdb.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 
 class MovieViewModel(application: Application) : AndroidViewModel(application) {
   private val _movies = MutableLiveData<List<Movie>>(emptyList())
@@ -29,7 +28,8 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
   private val _searchResults = MutableLiveData<List<Movie>>(emptyList())
   val searchResults: LiveData<List<Movie>> = _searchResults
 
-  private val sharedPreferences = application.getSharedPreferences("movie_preferences", Context.MODE_PRIVATE)
+  private val sharedPreferences =
+          application.getSharedPreferences("movie_preferences", Context.MODE_PRIVATE)
   private val gson = Gson()
   private val db = FirebaseFirestore.getInstance()
   private val auth = FirebaseAuth.getInstance()
@@ -42,76 +42,116 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
   private fun loadFavoritesFromFirestore() {
     val userId = auth.currentUser?.uid ?: return
 
-    db.collection("users")
-      .document(userId)
-      .collection("favoriteMovies")
-      .addSnapshotListener { snapshot, e ->
-        if (e != null) {
-          Log.e("Firestore", "Error loading favorites", e)
-          return@addSnapshotListener
-        }
-
-        snapshot?.let { documents ->
-          val movieList = documents.mapNotNull { doc ->
-            doc.toObject(Movie::class.java)
-          }
-          _favorites.value = movieList
-        }
+    db.collection("users").document(userId).collection("favoriteMovies").addSnapshotListener {
+            snapshot,
+            e ->
+      if (e != null) {
+        Log.e("Firestore", "Error loading favorites", e)
+        return@addSnapshotListener
       }
+
+      snapshot?.let { documents ->
+        val movieList = documents.mapNotNull { doc -> doc.toObject(Movie::class.java) }
+        _favorites.value = movieList
+      }
+    }
   }
 
   private fun saveFavoritesToFirestore(favorites: List<Movie>) {
-    auth.currentUser?.let { user ->
-      val batch = db.batch()
-      val userFavoritesRef = db.collection("users").document(user.uid)
+    val userId = auth.currentUser?.uid
+    Log.d("MovieViewModel", "Saving ${favorites.size} favorites to Firestore for user: $userId")
 
-      // Delete existing favorites
-      userFavoritesRef.collection("favoriteMovies")
-        .get()
-        .addOnSuccessListener { documents ->
-          documents.forEach { doc ->
-            batch.delete(doc.reference)
-          }
-
-          // Add new favorites
-          favorites.forEach { movie ->
-            val docRef = userFavoritesRef.collection("favoriteMovies").document(movie.id)
-            batch.set(docRef, movie)
-          }
-
-          batch.commit()
-            .addOnFailureListener { e ->
-              Log.e("MovieViewModel", "Error saving favorites: ", e)
-            }
-        }
+    if (userId == null) {
+      Log.e("MovieViewModel", "No user ID available for saving favorites")
+      return
     }
+
+    val userFavoritesRef = db.collection("users").document(userId).collection("favoriteMovies")
+
+    userFavoritesRef
+            .get()
+            .addOnSuccessListener { snapshot ->
+              Log.d("MovieViewModel", "Current Firestore documents count: ${snapshot.size()}")
+              val batch = db.batch()
+
+              // Delete existing documents
+              snapshot.documents.forEach { doc ->
+                batch.delete(doc.reference)
+                Log.d("MovieViewModel", "Queued delete for document: ${doc.id}")
+              }
+
+              // Add new favorites
+              favorites.forEach { movie ->
+                val docRef = userFavoritesRef.document(movie.id.toString())
+                batch.set(docRef, movie)
+                Log.d("MovieViewModel", "Queued save for movie: ${movie.title}")
+              }
+
+              // Commit the batch
+              batch.commit()
+                      .addOnSuccessListener {
+                        Log.d("MovieViewModel", "Successfully saved all favorites to Firestore")
+                      }
+                      .addOnFailureListener { e ->
+                        Log.e("MovieViewModel", "Error saving favorites to Firestore", e)
+                      }
+            }
+            .addOnFailureListener { e ->
+              Log.e("MovieViewModel", "Error getting current favorites from Firestore", e)
+            }
   }
 
   fun toggleFavorite(movie: Movie) {
-    val userId = auth.currentUser?.uid ?: return
+    val userId = auth.currentUser?.uid
+    Log.d("MovieViewModel", "Toggling favorite for movie: ${movie.title}, userId: $userId")
+
+    if (userId == null) {
+      Log.e("MovieViewModel", "No user ID available")
+      return
+    }
+
     val currentFavorites = _favorites.value.orEmpty()
     val updatedMovie = movie.copy(isFavorite = !movie.isFavorite)
 
-    val newFavorites = if (currentFavorites.any { it.id == movie.id }) {
-      currentFavorites.filter { it.id != movie.id }
-    } else {
-      currentFavorites + updatedMovie
-    }
+    val newFavorites =
+            if (currentFavorites.any { it.id == movie.id }) {
+              Log.d("MovieViewModel", "Removing movie from favorites: ${movie.title}")
+              currentFavorites.filter { it.id != movie.id }
+            } else {
+              Log.d("MovieViewModel", "Adding movie to favorites: ${movie.title}")
+              currentFavorites + updatedMovie
+            }
 
     _favorites.value = newFavorites
+    Log.d("MovieViewModel", "Current favorites count: ${newFavorites.size}")
 
-    // Update Firestore
-    db.collection("users")
-      .document(userId)
-      .collection("favoriteMovies")
-      .document(movie.id)
-      .set(updatedMovie)
-      .addOnSuccessListener {
-        Log.d("Firestore", "Movie favorite updated successfully")
-      }
-      .addOnFailureListener { e ->
-        Log.e("Firestore", "Error updating movie favorite", e)
-      }
+    // Save to Firestore
+    saveFavoritesToFirestore(newFavorites)
+
+    // Update individual item in Firestore
+    val movieRef =
+            db.collection("users")
+                    .document(userId)
+                    .collection("favoriteMovies")
+                    .document(movie.id.toString())
+
+    if (updatedMovie.isFavorite) {
+      movieRef.set(updatedMovie)
+              .addOnSuccessListener {
+                Log.d("MovieViewModel", "Successfully saved movie to Firestore: ${movie.title}")
+              }
+              .addOnFailureListener { e ->
+                Log.e("MovieViewModel", "Error saving movie to Firestore: ${movie.title}", e)
+              }
+    } else {
+      movieRef.delete()
+              .addOnSuccessListener {
+                Log.d("MovieViewModel", "Successfully removed movie from Firestore: ${movie.title}")
+              }
+              .addOnFailureListener { e ->
+                Log.e("MovieViewModel", "Error removing movie from Firestore: ${movie.title}", e)
+              }
+    }
 
     // Update local lists
     _movies.value = _movies.value?.map { if (it.id == movie.id) updatedMovie else it }

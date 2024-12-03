@@ -11,14 +11,12 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import ie.matlesz.mygeekdb.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
-
 
 class SeriesViewModel(application: Application) : AndroidViewModel(application) {
   private val _series = MutableLiveData<List<Series>>(emptyList())
@@ -43,65 +41,128 @@ class SeriesViewModel(application: Application) : AndroidViewModel(application) 
   val searchResults: LiveData<List<Series>> = _searchResults
 
   private fun loadFavoritesFromFirestore() {
-    auth.currentUser?.let { user ->
-      db.collection("users")
-        .document(user.uid)
-        .collection("favoriteMovies")
-        .get()
-        .addOnSuccessListener { documents ->
-          val seriesList = documents.mapNotNull { doc ->
-            doc.toObject(Series::class.java)
-          }
-          _favorites.value = seriesList
-        }
-        .addOnFailureListener { e ->
-          Log.e("SeriesViewModel", "Error loading favorites: ", e)
-        }
+    val userId = auth.currentUser?.uid ?: return
+
+    db.collection("users").document(userId).collection("favoriteSeries").addSnapshotListener {
+            snapshot,
+            e ->
+      if (e != null) {
+        Log.e("Firestore", "Error loading favorites", e)
+        return@addSnapshotListener
+      }
+
+      snapshot?.let { documents ->
+        val seriesList = documents.mapNotNull { doc -> doc.toObject(Series::class.java) }
+        _favorites.value = seriesList
+      }
     }
   }
 
   private fun saveFavoritesToFirestore(favorites: List<Series>) {
-    auth.currentUser?.let { user ->
-      val batch = db.batch()
-      val userFavoritesRef = db.collection("users").document(user.uid)
+    val userId = auth.currentUser?.uid
+    Log.d("SeriesViewModel", "Saving ${favorites.size} favorites to Firestore for user: $userId")
 
-      userFavoritesRef.collection("favoriteSeries")
-        .get()
-        .addOnSuccessListener { documents ->
-          documents.forEach { doc ->
-            batch.delete(doc.reference)
-          }
-
-          favorites.forEach { series ->
-            val docRef = userFavoritesRef.collection("favoriteSeries").document(series.id.toString())
-            batch.set(docRef, series)
-          }
-
-          batch.commit()
-            .addOnFailureListener { e ->
-              Log.e("SeriesViewModel", "Error saving favorites: ", e)
-            }
-        }
+    if (userId == null) {
+      Log.e("SeriesViewModel", "No user ID available for saving favorites")
+      return
     }
+
+    val userFavoritesRef = db.collection("users").document(userId).collection("favoriteSeries")
+
+    userFavoritesRef
+            .get()
+            .addOnSuccessListener { snapshot ->
+              Log.d("SeriesViewModel", "Current Firestore documents count: ${snapshot.size()}")
+              val batch = db.batch()
+
+              // Delete existing documents
+              snapshot.documents.forEach { doc ->
+                batch.delete(doc.reference)
+                Log.d("SeriesViewModel", "Queued delete for document: ${doc.id}")
+              }
+
+              // Add new favorites
+              favorites.forEach { series ->
+                val docRef = userFavoritesRef.document(series.id.toString())
+                batch.set(docRef, series)
+                Log.d("SeriesViewModel", "Queued save for series: ${series.title}")
+              }
+
+              // Commit the batch
+              batch.commit()
+                      .addOnSuccessListener {
+                        Log.d("SeriesViewModel", "Successfully saved all favorites to Firestore")
+                      }
+                      .addOnFailureListener { e ->
+                        Log.e("SeriesViewModel", "Error saving favorites to Firestore", e)
+                      }
+            }
+            .addOnFailureListener { e ->
+              Log.e("SeriesViewModel", "Error getting current favorites from Firestore", e)
+            }
   }
 
   fun toggleFavorite(series: Series) {
+    val userId = auth.currentUser?.uid
+    Log.d("SeriesViewModel", "Toggling favorite for series: ${series.title}, userId: $userId")
+
+    if (userId == null) {
+      Log.e("SeriesViewModel", "No user ID available")
+      return
+    }
+
     val currentFavorites = _favorites.value.orEmpty()
     val updatedSeries = series.copy(isFavorite = !series.isFavorite)
 
     val newFavorites =
             if (currentFavorites.any { it.id == series.id }) {
+              Log.d("SeriesViewModel", "Removing series from favorites: ${series.title}")
               currentFavorites.filter { it.id != series.id }
             } else {
+              Log.d("SeriesViewModel", "Adding series to favorites: ${series.title}")
               currentFavorites + updatedSeries
             }
 
     _favorites.value = newFavorites
+    Log.d("SeriesViewModel", "Current favorites count: ${newFavorites.size}")
+
+    // Save to Firestore
     saveFavoritesToFirestore(newFavorites)
 
-    // Update the series in the main list as well
+    // Update individual item in Firestore
+    val seriesRef =
+            db.collection("users")
+                    .document(userId)
+                    .collection("favoriteSeries")
+                    .document(series.id.toString())
+
+    if (updatedSeries.isFavorite) {
+      seriesRef
+              .set(updatedSeries)
+              .addOnSuccessListener {
+                Log.d("SeriesViewModel", "Successfully saved series to Firestore: ${series.title}")
+              }
+              .addOnFailureListener { e ->
+                Log.e("SeriesViewModel", "Error saving series to Firestore: ${series.title}", e)
+              }
+    } else {
+      seriesRef
+              .delete()
+              .addOnSuccessListener {
+                Log.d(
+                        "SeriesViewModel",
+                        "Successfully removed series from Firestore: ${series.title}"
+                )
+              }
+              .addOnFailureListener { e ->
+                Log.e("SeriesViewModel", "Error removing series from Firestore: ${series.title}", e)
+              }
+    }
+
+    // Update local lists
     _series.value = _series.value?.map { if (it.id == series.id) updatedSeries else it }
-    _searchResults.value = _searchResults.value?.map { if (it.id == series.id) updatedSeries else it }
+    _searchResults.value =
+            _searchResults.value?.map { if (it.id == series.id) updatedSeries else it }
   }
 
   fun isFavorite(series: Series): Boolean {
@@ -200,7 +261,9 @@ class SeriesViewModel(application: Application) : AndroidViewModel(application) 
                               voteAverage = seriesObj.getDouble("vote_average"),
                               voteCount = seriesObj.getInt("vote_count"),
                               popularity = seriesObj.getDouble("popularity"),
-                              isFavorite = _favorites.value?.any { it.id == seriesObj.getInt("id") } == true
+                              isFavorite =
+                                      _favorites.value?.any { it.id == seriesObj.getInt("id") } ==
+                                              true
                       )
               seriesList.add(series)
             }
