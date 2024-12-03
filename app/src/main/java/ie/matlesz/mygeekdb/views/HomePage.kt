@@ -5,6 +5,8 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.lifecycle.viewmodel.compose.viewModel
+import ie.matlesz.mygeekdb.viewmodel.MovieViewModel
+import ie.matlesz.mygeekdb.viewmodel.SeriesViewModel
 import kotlinx.coroutines.launch
 
 
@@ -19,15 +21,17 @@ fun HomePage(
   val series by seriesViewModel.series.observeAsState(emptyList())
 
   val favoriteMovies by movieViewModel.favorites.observeAsState(emptyList())
+  val favoriteSeries by seriesViewModel.favorites.observeAsState(emptyList())
   val movieSearchResults by movieViewModel.searchResults.observeAsState(emptyList())
   val seriesSearchResults by seriesViewModel.searchResults.observeAsState(emptyList())
 
   // State variables
+  var currentFavoriteType by remember { mutableStateOf("Movie") }
+  var currentSearchType by remember { mutableStateOf("Movie") }
   var searchQuery by remember { mutableStateOf("") }
-  var selectedTabIndex by remember { mutableStateOf(0) }
   var isSearchFocused by remember { mutableStateOf(false) }
-  var currentSearchType by remember { mutableStateOf("Movie") } // Default search type
   var selectedItem by remember { mutableStateOf<Any?>(null) }
+  var selectedTabIndex by remember { mutableStateOf(0) }
 
   val searchResults = if (currentSearchType == "Movie") movieSearchResults else seriesSearchResults
   val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -65,7 +69,7 @@ fun HomePage(
               searchQuery = query
               isSearchFocused = true
               if (currentSearchType == "Movie") {
-                movieViewModel.searchMovies(query)
+                movieViewModel.searchResults(query)
               } else {
                 seriesViewModel.searchSeries(query)
               }
@@ -78,7 +82,7 @@ fun HomePage(
               isSearchFocused = true
               if (searchQuery.isNotEmpty()) {
                 if (currentSearchType == "Movie") {
-                  movieViewModel.searchMovies(searchQuery)
+                  movieViewModel.searchResults(searchQuery)
                 } else {
                   seriesViewModel.searchSeries(searchQuery)
                 }
@@ -97,7 +101,7 @@ fun HomePage(
               currentSearchType = type
               if (searchQuery.isNotEmpty()) {
                 if (type == "Movie") {
-                  movieViewModel.searchMovies(searchQuery)
+                  movieViewModel.searchResults(searchQuery)
                 } else {
                   seriesViewModel.searchSeries(searchQuery)
                 }
@@ -143,7 +147,7 @@ fun HomePage(
                 type = "Movie",
                 onItemClick = { movie -> selectedItem = movie },
                 onFavoriteClick = { movie -> movieViewModel.toggleFavorite(movie) },
-           //     isFavorite = item.isFavorite // Provide the isFavorite lambda
+                //     isFavorite = item.isFavorite // Provide the isFavorite lambda
 
               )
 
@@ -152,23 +156,29 @@ fun HomePage(
                 type = "Series",
                 onItemClick = { series -> selectedItem = series },
                 onFavoriteClick = { series -> seriesViewModel.toggleFavorite(series) },
-//                isFavorite = { series ->
-//                  favoriteSeries.contains(series)
-//                }
               )
 
               2 -> FavoritesView(
-                favoriteItems = favoriteMovies.filterIsInstance<Movie>(), // Ensure it filters to Movie type
-                currentFavoriteType = currentSearchType, // or "Movie" as default
-                onFavoriteTypeChange = { type ->
-                  currentSearchType = type
-                  // Trigger fetching favorites for the selected type if needed
+                favoriteItems = if (currentFavoriteType == "Movie") {
+                  favoriteMovies
+                } else {
+                  favoriteSeries
+                },
+                currentFavoriteType = currentFavoriteType,
+                onFavoriteTypeChange = { newType ->
+                  currentFavoriteType = newType
                 },
                 onItemClick = { item ->
-                  if (item is Movie) selectedItem = item // Ensure type is Movie
+                  when (item) {
+                    is Movie -> selectedItem = item
+                    is Series -> selectedItem = item
+                  }
                 },
-                onFavoriteClick = { movie ->
-                  if (movie is Movie) movieViewModel.toggleFavorite(movie) // Ensure type safety
+                onFavoriteClick = { item ->
+                  when (item) {
+                    is Movie -> movieViewModel.toggleFavorite(item)
+                    is Series -> seriesViewModel.toggleFavorite(item)
+                  }
                 }
               )
             }
@@ -179,7 +189,12 @@ fun HomePage(
   }
 }
 
-
+//add toggle stage state
+//add permanent storage for the favourite list
+//add firebase database
+//add about
+//add readme
+//add profile image storage on firebase
 
 
 
