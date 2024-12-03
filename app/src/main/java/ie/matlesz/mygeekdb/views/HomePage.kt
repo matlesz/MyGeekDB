@@ -9,12 +9,11 @@ import ie.matlesz.mygeekdb.viewmodel.MovieViewModel
 import ie.matlesz.mygeekdb.viewmodel.SeriesViewModel
 import kotlinx.coroutines.launch
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomePage(
-  movieViewModel: MovieViewModel = viewModel(),
-  seriesViewModel: SeriesViewModel = viewModel()
+        movieViewModel: MovieViewModel = viewModel(),
+        seriesViewModel: SeriesViewModel = viewModel()
 ) {
   // Observables for Movies and Series
   val movies by movieViewModel.movies.observeAsState(emptyList())
@@ -40,147 +39,156 @@ fun HomePage(
 
   if (selectedItem != null) {
     // Show Detailed Media View
-    DetailedMediaView(
-      item = selectedItem!!,
-      onBack = { selectedItem = null }
-    )
+    DetailedMediaView(item = selectedItem!!, onBack = { selectedItem = null })
   } else {
     // Main Page Content
     ModalNavigationDrawer(
-      drawerState = drawerState,
-      drawerContent = {
-        DrawerContent(
-          onCloseDrawer = { scope.launch { drawerState.close() } },
-          onHomeClick = {
-            isSearchFocused = false
-            searchQuery = ""
-            selectedTabIndex = 0
-            scope.launch { drawerState.close() }
-          }
-//          onFavoritesClick = { navController.navigate("favorites") }
-        )
-      }
+            drawerState = drawerState,
+            drawerContent = {
+              DrawerContent(
+                      onCloseDrawer = { scope.launch { drawerState.close() } },
+                      onHomeClick = {
+                        isSearchFocused = false
+                        searchQuery = ""
+                        selectedTabIndex = 0
+                        scope.launch { drawerState.close() }
+                      }
+                      //          onFavoritesClick = { navController.navigate("favorites") }
+                      )
+            }
     ) {
       Scaffold(
-        topBar = {
-          MyTopBar(
-            onHamburgerClick = { scope.launch { drawerState.open() } },
-            onSearchQueryChange = { query ->
-              searchQuery = query
-              isSearchFocused = true
-              if (currentSearchType == "Movie") {
-                movieViewModel.searchResults(query)
-              } else {
-                seriesViewModel.searchSeries(query)
+              topBar = {
+                MyTopBar(
+                        onHamburgerClick = { scope.launch { drawerState.open() } },
+                        onSearchQueryChange = { query ->
+                          searchQuery = query
+                          isSearchFocused = true
+                          if (currentSearchType == "Movie") {
+                            movieViewModel.searchResults(query)
+                          } else {
+                            seriesViewModel.searchSeries(query)
+                          }
+                        },
+                        onLogoClick = {
+                          isSearchFocused = false
+                          searchQuery = ""
+                        },
+                        onSearchFocused = {
+                          isSearchFocused = true
+                          if (searchQuery.isNotEmpty()) {
+                            if (currentSearchType == "Movie") {
+                              movieViewModel.searchResults(searchQuery)
+                            } else {
+                              seriesViewModel.searchSeries(searchQuery)
+                            }
+                          }
+                        }
+                )
               }
-            },
-            onLogoClick = {
-              isSearchFocused = false
-              searchQuery = ""
-            },
-            onSearchFocused = {
-              isSearchFocused = true
-              if (searchQuery.isNotEmpty()) {
-                if (currentSearchType == "Movie") {
-                  movieViewModel.searchResults(searchQuery)
-                } else {
-                  seriesViewModel.searchSeries(searchQuery)
-                }
-              }
-            }
-          )
-        }
       ) { paddingValues ->
         if (isSearchFocused) {
           // Search Results View
           SearchView(
-            searchQuery = searchQuery,
-            onBackPressed = { isSearchFocused = false },
-            searchResults = searchResults,
-            onSearchTypeChange = { type ->
-              currentSearchType = type
-              if (searchQuery.isNotEmpty()) {
-                if (type == "Movie") {
-                  movieViewModel.searchResults(searchQuery)
-                } else {
-                  seriesViewModel.searchSeries(searchQuery)
-                }
-              }
-            },
-            currentSearchType = currentSearchType,
-            onItemClick = { item -> selectedItem = item },
-            onFavoriteClick = { item ->
-              when (item) {
-                is Movie -> movieViewModel.toggleFavorite(item)
-                is Series -> seriesViewModel.toggleFavorite(item)
-              }
-            }
+                  searchQuery = searchQuery,
+                  onBackPressed = {
+                    isSearchFocused = false
+                    searchQuery = ""
+                  },
+                  searchResults =
+                          if (currentSearchType == "Movie") {
+                            movieViewModel.searchResults.value?.map { movie ->
+                              movie.copy(isFavorite = movieViewModel.isFavorite(movie))
+                            }
+                                    ?: emptyList()
+                          } else {
+                            seriesViewModel.searchResults.value?.map { series ->
+                              series.copy(isFavorite = seriesViewModel.isFavorite(series))
+                            }
+                                    ?: emptyList()
+                          },
+                  onSearchTypeChange = { type ->
+                    currentSearchType = type
+                    if (searchQuery.isNotEmpty()) {
+                      if (type == "Movie") {
+                        movieViewModel.searchResults(searchQuery)
+                      } else {
+                        seriesViewModel.searchSeries(searchQuery)
+                      }
+                    }
+                  },
+                  currentSearchType = currentSearchType,
+                  onItemClick = { item -> selectedItem = item },
+                  onFavoriteClick = { item ->
+                    when (item) {
+                      is Movie -> movieViewModel.toggleFavorite(item)
+                      is Series -> seriesViewModel.toggleFavorite(item)
+                    }
+                  }
           )
         } else {
           // Recommended Movies/Series View
-          Column(
-            modifier = Modifier
-              .padding(paddingValues)
-              .fillMaxSize()
-          ) {
+          Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
             TabRow(selectedTabIndex = selectedTabIndex) {
               Tab(
-                selected = selectedTabIndex == 0,
-                onClick = { selectedTabIndex = 0 },
-                text = { Text("Recommended Movies") }
+                      selected = selectedTabIndex == 0,
+                      onClick = { selectedTabIndex = 0 },
+                      text = { Text("Recommended Movies") }
               )
               Tab(
-                selected = selectedTabIndex == 1,
-                onClick = { selectedTabIndex = 1 },
-                text = { Text("Recommended Series") }
+                      selected = selectedTabIndex == 1,
+                      onClick = { selectedTabIndex = 1 },
+                      text = { Text("Recommended Series") }
               )
               Tab(
-                selected = selectedTabIndex == 2,
-                onClick = { selectedTabIndex = 2 },
-                text = { Text("Favorites") }
+                      selected = selectedTabIndex == 2,
+                      onClick = { selectedTabIndex = 2 },
+                      text = { Text("Favorites") }
               )
             }
 
             when (selectedTabIndex) {
-              0 -> MediaItemList(
-                items = movies,
-                type = "Movie",
-                onItemClick = { movie -> selectedItem = movie },
-                onFavoriteClick = { movie -> movieViewModel.toggleFavorite(movie) },
-                //     isFavorite = item.isFavorite // Provide the isFavorite lambda
+              0 ->
+                      MediaItemList(
+                              items = movies,
+                              type = "Movie",
+                              onItemClick = { movie -> selectedItem = movie },
+                              onFavoriteClick = { movie -> movieViewModel.toggleFavorite(movie) },
+                              //     isFavorite = item.isFavorite // Provide the isFavorite lambda
 
-              )
-
-              1 -> MediaItemList(
-                items = series,
-                type = "Series",
-                onItemClick = { series -> selectedItem = series },
-                onFavoriteClick = { series -> seriesViewModel.toggleFavorite(series) },
-              )
-
-              2 -> FavoritesView(
-                favoriteItems = if (currentFavoriteType == "Movie") {
-                  favoriteMovies
-                } else {
-                  favoriteSeries
-                },
-                currentFavoriteType = currentFavoriteType,
-                onFavoriteTypeChange = { newType ->
-                  currentFavoriteType = newType
-                },
-                onItemClick = { item ->
-                  when (item) {
-                    is Movie -> selectedItem = item
-                    is Series -> selectedItem = item
-                  }
-                },
-                onFavoriteClick = { item ->
-                  when (item) {
-                    is Movie -> movieViewModel.toggleFavorite(item)
-                    is Series -> seriesViewModel.toggleFavorite(item)
-                  }
-                }
-              )
+                              )
+              1 ->
+                      MediaItemList(
+                              items = series,
+                              type = "Series",
+                              onItemClick = { series -> selectedItem = series },
+                              onFavoriteClick = { series ->
+                                seriesViewModel.toggleFavorite(series)
+                              },
+                      )
+              2 ->
+                      FavoritesView(
+                              favoriteItems =
+                                      if (currentFavoriteType == "Movie") {
+                                        favoriteMovies
+                                      } else {
+                                        favoriteSeries
+                                      },
+                              currentFavoriteType = currentFavoriteType,
+                              onFavoriteTypeChange = { newType -> currentFavoriteType = newType },
+                              onItemClick = { item ->
+                                when (item) {
+                                  is Movie -> selectedItem = item
+                                  is Series -> selectedItem = item
+                                }
+                              },
+                              onFavoriteClick = { item ->
+                                when (item) {
+                                  is Movie -> movieViewModel.toggleFavorite(item)
+                                  is Series -> seriesViewModel.toggleFavorite(item)
+                                }
+                              }
+                      )
             }
           }
         }
@@ -189,15 +197,9 @@ fun HomePage(
   }
 }
 
-//add toggle stage state
-//add permanent storage for the favourite list
-//add firebase database
-//add about
-//add readme
-//add profile image storage on firebase
-
-
-
-
-
-
+// add toggle stage state
+// add permanent storage for the favourite list
+// add firebase database
+// add about
+// add readme
+// add profile image storage on firebase

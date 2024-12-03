@@ -66,6 +66,7 @@ class SeriesViewModel(application: Application) : AndroidViewModel(application) 
 
     // Update the series in the main list as well
     _series.value = _series.value?.map { if (it.id == series.id) updatedSeries else it }
+    _searchResults.value = _searchResults.value?.map { if (it.id == series.id) updatedSeries else it }
   }
 
   fun isFavorite(series: Series): Boolean {

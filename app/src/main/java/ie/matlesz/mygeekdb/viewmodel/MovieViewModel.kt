@@ -67,6 +67,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
 
     // Update the movie in the main list as well
     _movies.value = _movies.value?.map { if (it.id == movie.id) updatedMovie else it }
+    _searchResults.value = _searchResults.value?.map { if (it.id == movie.id) updatedMovie else it }
   }
 
   fun isFavorite(movie: Movie): Boolean {
