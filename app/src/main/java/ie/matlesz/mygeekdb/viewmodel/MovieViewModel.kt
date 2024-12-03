@@ -40,21 +40,24 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
   }
 
   private fun loadFavoritesFromFirestore() {
-    auth.currentUser?.let { user ->
-      db.collection("users")
-        .document(user.uid)
-        .collection("favoriteMovies")
-        .get()
-        .addOnSuccessListener { documents ->
+    val userId = auth.currentUser?.uid ?: return
+
+    db.collection("users")
+      .document(userId)
+      .collection("favoriteMovies")
+      .addSnapshotListener { snapshot, e ->
+        if (e != null) {
+          Log.e("Firestore", "Error loading favorites", e)
+          return@addSnapshotListener
+        }
+
+        snapshot?.let { documents ->
           val movieList = documents.mapNotNull { doc ->
             doc.toObject(Movie::class.java)
           }
           _favorites.value = movieList
         }
-        .addOnFailureListener { e ->
-          Log.e("MovieViewModel", "Error loading favorites: ", e)
-        }
-    }
+      }
   }
 
   private fun saveFavoritesToFirestore(favorites: List<Movie>) {
@@ -85,20 +88,32 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
   }
 
   fun toggleFavorite(movie: Movie) {
+    val userId = auth.currentUser?.uid ?: return
     val currentFavorites = _favorites.value.orEmpty()
     val updatedMovie = movie.copy(isFavorite = !movie.isFavorite)
 
-    val newFavorites =
-            if (currentFavorites.any { it.id == movie.id }) {
-              currentFavorites.filter { it.id != movie.id }
-            } else {
-              currentFavorites + updatedMovie
-            }
+    val newFavorites = if (currentFavorites.any { it.id == movie.id }) {
+      currentFavorites.filter { it.id != movie.id }
+    } else {
+      currentFavorites + updatedMovie
+    }
 
     _favorites.value = newFavorites
-    saveFavoritesToFirestore(newFavorites)
 
-    // Update the movie in the main list as well
+    // Update Firestore
+    db.collection("users")
+      .document(userId)
+      .collection("favoriteMovies")
+      .document(movie.id)
+      .set(updatedMovie)
+      .addOnSuccessListener {
+        Log.d("Firestore", "Movie favorite updated successfully")
+      }
+      .addOnFailureListener { e ->
+        Log.e("Firestore", "Error updating movie favorite", e)
+      }
+
+    // Update local lists
     _movies.value = _movies.value?.map { if (it.id == movie.id) updatedMovie else it }
     _searchResults.value = _searchResults.value?.map { if (it.id == movie.id) updatedMovie else it }
   }

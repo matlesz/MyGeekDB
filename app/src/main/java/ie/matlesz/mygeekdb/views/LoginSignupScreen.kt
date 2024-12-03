@@ -1,165 +1,111 @@
-import android.content.Context
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+package ie.matlesz.mygeekdb.views
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import com.google.firebase.auth.FirebaseAuth
-import ie.matlesz.mygeekdb.SplashScreenContent
+import androidx.lifecycle.viewmodel.compose.viewModel
+import ie.matlesz.mygeekdb.viewmodel.LoginViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginSignupScreen(onLoginSuccess: () -> Unit) {
+fun LoginSignupScreen(loginViewModel: LoginViewModel = viewModel(), onLoginSuccess: () -> Unit) {
   var email by remember { mutableStateOf("") }
   var password by remember { mutableStateOf("") }
-  var isLoginMode by remember { mutableStateOf(true) } // Toggle between login and signup
-  var errorMessage by remember { mutableStateOf<String?>(null) }
+  var isLogin by remember { mutableStateOf(true) }
 
-  val context = LocalContext.current
+  val loginState by loginViewModel.loginState.observeAsState()
+  val currentUser by loginViewModel.currentUser.observeAsState()
 
-  Column(
-    modifier = Modifier
-      .fillMaxSize()
-      .padding(16.dp),
-    verticalArrangement = Arrangement.Center,
-    horizontalAlignment = Alignment.CenterHorizontally
-  ) {
-    // Title
-    Text(
-      text = if (isLoginMode) "Login" else "Signup",
-      style = MaterialTheme.typography.headlineMedium
-    )
-    Spacer(modifier = Modifier.height(16.dp))
-
-    // Email Field
-    TextField(
-      value = email,
-      onValueChange = { email = it },
-      label = { Text("Email") },
-      modifier = Modifier.fillMaxWidth()
-    )
-    Spacer(modifier = Modifier.height(8.dp))
-
-    // Password Field
-    TextField(
-      value = password,
-      onValueChange = { password = it },
-      label = { Text("Password") },
-      modifier = Modifier.fillMaxWidth(),
-      visualTransformation = PasswordVisualTransformation()
-    )
-    Spacer(modifier = Modifier.height(16.dp))
-
-    // Login/Signup Button
-    Button(
-      onClick = {
-        if (isLoginMode) {
-          loginUser(email, password, context, onLoginSuccess, { errorMessage = it })
-        } else {
-          signUpUser(email, password, context, onLoginSuccess, { errorMessage = it })
-        }
-      },
-      modifier = Modifier.fillMaxWidth()
-    ) {
-      Text(if (isLoginMode) "Login" else "Signup")
-    }
-
-    Spacer(modifier = Modifier.height(8.dp))
-
-    // Toggle Login/Signup Mode Button
-    TextButton(onClick = { isLoginMode = !isLoginMode }) {
-      Text(if (isLoginMode) "Switch to Signup" else "Switch to Login")
-    }
-
-    // Display Error Message
-    errorMessage?.let {
-      Text(
-        text = it,
-        color = MaterialTheme.colorScheme.error,
-        modifier = Modifier.padding(top = 16.dp)
-      )
+  // Navigate when user is logged in
+  LaunchedEffect(currentUser) {
+    if (currentUser != null) {
+      onLoginSuccess()
     }
   }
-}
 
-// Firebase Login Logic
-fun loginUser(
-  email: String,
-  password: String,
-  context: Context,
-  onSuccess: () -> Unit,
-  onError: (String) -> Unit
-) {
-  val auth = FirebaseAuth.getInstance()
-  auth.signInWithEmailAndPassword(email, password)
-    .addOnCompleteListener { task ->
-      if (task.isSuccessful) {
-        onSuccess()
-      } else {
-        val error = task.exception?.localizedMessage ?: "Login failed"
-        onError(error)
+  // Show loading or error states
+  loginState?.let { state ->
+    when (state) {
+      is LoginViewModel.LoginState.Loading -> {
+        CircularProgressIndicator(modifier = Modifier.size(50.dp))
       }
+      is LoginViewModel.LoginState.Error -> {
+        AlertDialog(
+                onDismissRequest = {},
+                title = { Text("Error") },
+                text = { Text(state.message) },
+                confirmButton = { TextButton(onClick = {}) { Text("OK") } }
+        )
+      }
+      else -> {}
     }
-}
+  }
 
-// Firebase Signup Logic
-fun signUpUser(
-  email: String,
-  password: String,
-  context: Context,
-  onSuccess: () -> Unit,
-  onError: (String) -> Unit
-) {
-  val auth = FirebaseAuth.getInstance()
-  auth.createUserWithEmailAndPassword(email, password)
-    .addOnCompleteListener { task ->
-      if (task.isSuccessful) {
-        onSuccess()
-      } else {
-        val error = task.exception?.localizedMessage ?: "Signup failed"
-        onError(error)
-      }
+  Column(
+          modifier = Modifier.fillMaxSize().padding(16.dp),
+          horizontalAlignment = Alignment.CenterHorizontally,
+          verticalArrangement = Arrangement.Center
+  ) {
+    Text(
+            text = if (isLogin) "Login" else "Sign Up",
+            style = MaterialTheme.typography.headlineMedium
+    )
+
+    Spacer(modifier = Modifier.height(32.dp))
+
+    OutlinedTextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("Email") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+    )
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Password") },
+            singleLine = true,
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth()
+    )
+
+    Spacer(modifier = Modifier.height(32.dp))
+
+    Button(
+            onClick = {
+              if (isLogin) {
+                loginViewModel.login(email, password)
+              } else {
+                loginViewModel.register(email, password)
+              }
+            },
+            modifier = Modifier.fillMaxWidth()
+    ) { Text(if (isLogin) "Login" else "Sign Up") }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    TextButton(onClick = { isLogin = !isLogin }) {
+      Text(if (isLogin) "Need an account? Sign Up" else "Have an account? Login")
     }
+  }
 }
 
 @Composable
-fun AppNavigators(navController: NavHostController) {
-  NavHost(navController = navController, startDestination = "splash") {
-    composable("splash") {
-      SplashScreenContent(onSplashFinished = {
-        navController.navigate("login") {
-          popUpTo("splash") { inclusive = true }
-        }
-      })
-    }
-    composable("login") {
-      LoginSignupScreen(onLoginSuccess = {
-        navController.navigate("home") {
-          popUpTo("login") { inclusive = true }
-        }
-      })
-    }
-    composable("home") {
-      HomePage()
-    }
+fun LoadingScreen() {
+  Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    CircularProgressIndicator()
   }
+}
+
+@Composable
+fun ErrorScreen(message: String) {
+  Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(message) }
 }
