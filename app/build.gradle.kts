@@ -119,7 +119,7 @@ dependencies {
   implementation(platform("com.google.firebase:firebase-bom:33.6.0"))
   implementation("com.google.firebase:firebase-analytics")
   implementation ("com.google.firebase:firebase-auth:22.0.0")
-
+  implementation("com.google.firebase:firebase-firestore-ktx:24.10.0")
 
   implementation ("androidx.core:core-splashscreen:1.0.0")
   implementation("com.google.code.gson:gson:2.10.1")

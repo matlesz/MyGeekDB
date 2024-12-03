@@ -16,6 +16,8 @@ import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class MovieViewModel(application: Application) : AndroidViewModel(application) {
   private val _movies = MutableLiveData<List<Movie>>(emptyList())
@@ -24,31 +26,62 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
   private val _favorites = MutableLiveData<List<Movie>>(emptyList())
   val favorites: LiveData<List<Movie>> = _favorites
 
-  private val sharedPreferences =
-          application.getSharedPreferences("movie_preferences", Context.MODE_PRIVATE)
-  private val gson = Gson()
-
-  init {
-    loadSavedFavorites()
-    fetchMovieRecommendations()
-  }
-
   private val _searchResults = MutableLiveData<List<Movie>>(emptyList())
   val searchResults: LiveData<List<Movie>> = _searchResults
 
+  private val sharedPreferences = application.getSharedPreferences("movie_preferences", Context.MODE_PRIVATE)
+  private val gson = Gson()
+  private val db = FirebaseFirestore.getInstance()
+  private val auth = FirebaseAuth.getInstance()
 
-  private fun loadSavedFavorites() {
-    val favoritesJson = sharedPreferences.getString("favorites", null)
-    if (favoritesJson != null) {
-      val type = object : TypeToken<List<Movie>>() {}.type
-      val savedFavorites = gson.fromJson<List<Movie>>(favoritesJson, type)
-      _favorites.value = savedFavorites
+  init {
+    loadFavoritesFromFirestore()
+    fetchMovieRecommendations()
+  }
+
+  private fun loadFavoritesFromFirestore() {
+    auth.currentUser?.let { user ->
+      db.collection("users")
+        .document(user.uid)
+        .collection("favoriteMovies")
+        .get()
+        .addOnSuccessListener { documents ->
+          val movieList = documents.mapNotNull { doc ->
+            doc.toObject(Movie::class.java)
+          }
+          _favorites.value = movieList
+        }
+        .addOnFailureListener { e ->
+          Log.e("MovieViewModel", "Error loading favorites: ", e)
+        }
     }
   }
 
-  private fun saveFavorites(favorites: List<Movie>) {
-    val favoritesJson = gson.toJson(favorites)
-    sharedPreferences.edit().putString("favorites", favoritesJson).apply()
+  private fun saveFavoritesToFirestore(favorites: List<Movie>) {
+    auth.currentUser?.let { user ->
+      val batch = db.batch()
+      val userFavoritesRef = db.collection("users").document(user.uid)
+
+      // Delete existing favorites
+      userFavoritesRef.collection("favoriteMovies")
+        .get()
+        .addOnSuccessListener { documents ->
+          documents.forEach { doc ->
+            batch.delete(doc.reference)
+          }
+
+          // Add new favorites
+          favorites.forEach { movie ->
+            val docRef = userFavoritesRef.collection("favoriteMovies").document(movie.id)
+            batch.set(docRef, movie)
+          }
+
+          batch.commit()
+            .addOnFailureListener { e ->
+              Log.e("MovieViewModel", "Error saving favorites: ", e)
+            }
+        }
+    }
   }
 
   fun toggleFavorite(movie: Movie) {
@@ -63,7 +96,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
             }
 
     _favorites.value = newFavorites
-    saveFavorites(newFavorites)
+    saveFavoritesToFirestore(newFavorites)
 
     // Update the movie in the main list as well
     _movies.value = _movies.value?.map { if (it.id == movie.id) updatedMovie else it }

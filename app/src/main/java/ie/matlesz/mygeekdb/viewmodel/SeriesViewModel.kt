@@ -8,6 +8,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import ie.matlesz.mygeekdb.BuildConfig
@@ -16,6 +18,7 @@ import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
+
 
 class SeriesViewModel(application: Application) : AndroidViewModel(application) {
   private val _series = MutableLiveData<List<Series>>(emptyList())
@@ -28,26 +31,58 @@ class SeriesViewModel(application: Application) : AndroidViewModel(application) 
           application.getSharedPreferences("series_preferences", Context.MODE_PRIVATE)
   private val gson = Gson()
 
+  private val db = FirebaseFirestore.getInstance()
+  private val auth = FirebaseAuth.getInstance()
+
   init {
-    loadSavedFavorites()
+    loadFavoritesFromFirestore()
     fetchSeriesRecommendations()
   }
 
   private val _searchResults = MutableLiveData<List<Series>>(emptyList())
   val searchResults: LiveData<List<Series>> = _searchResults
 
-  private fun loadSavedFavorites() {
-    val favoritesJson = sharedPreferences.getString("favorites", null)
-    if (favoritesJson != null) {
-      val type = object : TypeToken<List<Series>>() {}.type
-      val savedFavorites = gson.fromJson<List<Series>>(favoritesJson, type)
-      _favorites.value = savedFavorites
+  private fun loadFavoritesFromFirestore() {
+    auth.currentUser?.let { user ->
+      db.collection("users")
+        .document(user.uid)
+        .collection("favoriteMovies")
+        .get()
+        .addOnSuccessListener { documents ->
+          val seriesList = documents.mapNotNull { doc ->
+            doc.toObject(Series::class.java)
+          }
+          _favorites.value = seriesList
+        }
+        .addOnFailureListener { e ->
+          Log.e("SeriesViewModel", "Error loading favorites: ", e)
+        }
     }
   }
 
-  private fun saveFavorites(favorites: List<Series>) {
-    val favoritesJson = gson.toJson(favorites)
-    sharedPreferences.edit().putString("favorites", favoritesJson).apply()
+  private fun saveFavoritesToFirestore(favorites: List<Series>) {
+    auth.currentUser?.let { user ->
+      val batch = db.batch()
+      val userFavoritesRef = db.collection("users").document(user.uid)
+
+      userFavoritesRef.collection("favoriteSeries")
+        .get()
+        .addOnSuccessListener { documents ->
+          documents.forEach { doc ->
+            batch.delete(doc.reference)
+          }
+
+          favorites.forEach { series ->
+            val docRef = userFavoritesRef.collection("favoriteSeries").document(series.id.toString())
+            batch.set(docRef, series)
+          }
+
+          batch.commit()
+            .addOnFailureListener { e ->
+              Log.e("SeriesViewModel", "Error saving favorites: ", e)
+            }
+        }
+    }
   }
 
   fun toggleFavorite(series: Series) {
@@ -62,7 +97,7 @@ class SeriesViewModel(application: Application) : AndroidViewModel(application) 
             }
 
     _favorites.value = newFavorites
-    saveFavorites(newFavorites)
+    saveFavoritesToFirestore(newFavorites)
 
     // Update the series in the main list as well
     _series.value = _series.value?.map { if (it.id == series.id) updatedSeries else it }
