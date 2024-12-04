@@ -52,11 +52,11 @@ fun MyTopBar(
             )
           },
           title = {
-            Box(modifier = Modifier.width(300.dp).padding(horizontal = 20.dp)) {
+            Box(modifier = Modifier.width(300.dp).padding(horizontal = 8.dp)) {
               TextField(
                       value = searchQuery,
                       onValueChange = { query -> onSearchQueryUpdated(query) },
-                      placeholder = { Text(text = "Search...", fontSize = 12.sp) },
+                      placeholder = { Text(text = "Search...", fontSize = 14.sp) },
                       leadingIcon = {
                         Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon")
                       },
@@ -80,6 +80,7 @@ fun MyTopBar(
                                       focusedIndicatorColor = Color.Transparent,
                                       unfocusedIndicatorColor = Color.Transparent
                               ),
+                      textStyle = androidx.compose.ui.text.TextStyle(fontSize = 14.sp),
                       keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
                       keyboardActions =
                               KeyboardActions(
@@ -90,7 +91,7 @@ fun MyTopBar(
                                         focusManager.clearFocus()
                                       }
                               ),
-                      maxLines = 1
+                      singleLine = true
               )
             }
           },
