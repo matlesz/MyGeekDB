@@ -7,7 +7,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ie.matlesz.mygeekdb.viewmodel.MovieViewModel
 import ie.matlesz.mygeekdb.viewmodel.SeriesViewModel
@@ -29,8 +28,6 @@ fun HomePage(
 
   val favoriteMovies by movieViewModel.favorites.observeAsState(emptyList())
   val favoriteSeries by seriesViewModel.favorites.observeAsState(emptyList())
-  val movieSearchResults by movieViewModel.searchResults.observeAsState(emptyList())
-  val seriesSearchResults by seriesViewModel.searchResults.observeAsState(emptyList())
 
   // State variables
   var currentFavoriteType by remember { mutableStateOf("Movie") }
@@ -43,10 +40,8 @@ fun HomePage(
   var showAboutPage by remember { mutableStateOf(false) }
 
   var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
-  val searchResults = if (currentSearchType == "Movie") movieSearchResults else seriesSearchResults
   val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
   val scope = rememberCoroutineScope()
-  val focusManager = LocalFocusManager.current
 
   val imagePickerLauncher =
           rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) {
@@ -191,8 +186,6 @@ fun HomePage(
                               type = "Movie",
                               onItemClick = { movie -> selectedItem = movie },
                               onFavoriteClick = { movie -> movieViewModel.toggleFavorite(movie) },
-                              //     isFavorite = item.isFavorite // Provide the isFavorite lambda
-
                               )
               1 ->
                       MediaItemList(
@@ -233,4 +226,3 @@ fun HomePage(
     }
   }
 }
-// add profile image storage on firebase
