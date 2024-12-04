@@ -1,4 +1,6 @@
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -7,7 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -19,41 +21,48 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import ie.matlesz.mygeekdb.views.LoadingScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchView(
         searchQuery: String,
         onBackPressed: () -> Unit,
-        searchResults: List<Any>, // Accepts both Movie and Series
-        onSearchTypeChange: (String) -> Unit, // Callback to change search type
-        currentSearchType: String, // Current search type ("Movie" or "Series")
-        onItemClick: (Any) -> Unit, // Callback for item click
-        onFavoriteClick: (Any) -> Unit // Callback for favorite click
+        searchResults: List<Any>,
+        onSearchTypeChange: (String) -> Unit,
+        currentSearchType: String,
+        onItemClick: (Any) -> Unit,
+        onFavoriteClick: (Any) -> Unit,
+        isLoading: Boolean
 ) {
+  Log.d(
+          "SearchView",
+          "Rendering SearchView with ${searchResults.size} results, isLoading: $isLoading"
+  )
   Scaffold(
           topBar = {
             TopAppBar(
+                    title = { Text("Search Results") },
                     navigationIcon = {
-                      IconButton(onClick = { onBackPressed() }) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                      IconButton(onClick = onBackPressed) {
+                        Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Back")
                       }
                     },
-                    title = { Text("Search Results") },
                     colors =
                             TopAppBarDefaults.topAppBarColors(
-                                    containerColor = MaterialTheme.colorScheme.primary
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer
                             )
             )
           }
   ) { paddingValues ->
-    Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
-      // Toggle buttons for Movie and Series search
+    Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+      // Search type toggle
       Row(
-              modifier = Modifier.fillMaxWidth().padding(16.dp),
+              modifier = Modifier.fillMaxWidth().padding(8.dp),
               horizontalArrangement = Arrangement.SpaceEvenly
       ) {
         Button(
@@ -66,6 +75,7 @@ fun SearchView(
                                         else Color.Gray
                         )
         ) { Text("Movies") }
+
         Button(
                 onClick = { onSearchTypeChange("Series") },
                 colors =
@@ -78,28 +88,22 @@ fun SearchView(
         ) { Text("Series") }
       }
 
-      if (searchResults.isEmpty()) {
-        Text(
-                text = "No results found",
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color.Gray
-        )
+      if (isLoading) {
+        LoadingScreen()
+      } else if (searchResults.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+          Text(
+                  text = "No results found",
+                  style = MaterialTheme.typography.bodyLarge,
+                  color = Color.Gray
+          )
+        }
       } else {
         LazyColumn(
                 modifier = Modifier.padding(16.dp).fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-          items(
-                  items = searchResults,
-                  key = { result ->
-                    when (result) {
-                      is Movie -> "movie-${result.id}"
-                      is Series -> "series-${result.id}"
-                      else -> result.hashCode().toString()
-                    }
-                  }
-          ) { result ->
+          items(searchResults) { result ->
             when (result) {
               is Movie -> {
                 MediaItem(

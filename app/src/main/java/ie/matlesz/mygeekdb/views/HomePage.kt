@@ -43,6 +43,8 @@ fun HomePage(
   val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
   val scope = rememberCoroutineScope()
 
+  var isSearchLoading by remember { mutableStateOf(false) }
+
   val imagePickerLauncher =
           rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) {
                   uri: Uri? ->
@@ -51,6 +53,9 @@ fun HomePage(
               selectedImageUri = uri
             }
           }
+
+  val movieSearchResults by movieViewModel.searchResults.observeAsState(initial = emptyList())
+  val seriesSearchResults by seriesViewModel.searchResults.observeAsState(initial = emptyList())
 
   if (showAboutPage) {
     AboutView(onNavigateBack = { showAboutPage = false })
@@ -96,10 +101,14 @@ fun HomePage(
                         onSearchQueryChange = { query ->
                           searchQuery = query
                           isSearchFocused = true
-                          if (currentSearchType == "Movie") {
-                            movieViewModel.searchResults(query)
-                          } else {
-                            seriesViewModel.searchSeries(query)
+                          if (query.isNotEmpty()) {
+                            isSearchLoading = true
+                            if (currentSearchType == "Movie") {
+                              movieViewModel.searchResults(query)
+                            } else {
+                              seriesViewModel.searchSeries(query)
+                            }
+                            isSearchLoading = false
                           }
                         },
                         onLogoClick = {
@@ -109,13 +118,17 @@ fun HomePage(
                         onSearchFocused = {
                           isSearchFocused = true
                           if (searchQuery.isNotEmpty()) {
+                            isSearchLoading = true
                             if (currentSearchType == "Movie") {
                               movieViewModel.searchResults(searchQuery)
                             } else {
                               seriesViewModel.searchSeries(searchQuery)
                             }
                           }
-                        }
+                        },
+                        isSearchLoading = isSearchLoading,
+                        searchQuery = searchQuery,
+                        onSearchQueryUpdated = { query -> searchQuery = query }
                 )
               }
       ) { paddingValues ->
@@ -126,27 +139,28 @@ fun HomePage(
                   onBackPressed = {
                     isSearchFocused = false
                     searchQuery = ""
+                    isSearchLoading = false
                   },
                   searchResults =
                           if (currentSearchType == "Movie") {
-                            movieViewModel.searchResults.value?.map { movie ->
+                            movieSearchResults.map { movie ->
                               movie.copy(isFavorite = movieViewModel.isFavorite(movie))
                             }
-                                    ?: emptyList()
                           } else {
-                            seriesViewModel.searchResults.value?.map { series ->
+                            seriesSearchResults.map { series ->
                               series.copy(isFavorite = seriesViewModel.isFavorite(series))
                             }
-                                    ?: emptyList()
                           },
                   onSearchTypeChange = { type ->
                     currentSearchType = type
                     if (searchQuery.isNotEmpty()) {
+                      isSearchLoading = true
                       if (type == "Movie") {
                         movieViewModel.searchResults(searchQuery)
                       } else {
                         seriesViewModel.searchSeries(searchQuery)
                       }
+                      isSearchLoading = false
                     }
                   },
                   currentSearchType = currentSearchType,
@@ -156,7 +170,8 @@ fun HomePage(
                       is Movie -> movieViewModel.toggleFavorite(item)
                       is Series -> seriesViewModel.toggleFavorite(item)
                     }
-                  }
+                  },
+                  isLoading = isSearchLoading
           )
         } else {
           // Recommended Movies/Series View
@@ -186,7 +201,7 @@ fun HomePage(
                               type = "Movie",
                               onItemClick = { movie -> selectedItem = movie },
                               onFavoriteClick = { movie -> movieViewModel.toggleFavorite(movie) },
-                              )
+                      )
               1 ->
                       MediaItemList(
                               items = series,
