@@ -48,7 +48,7 @@ fun MyTopBar(
             Icon(
                     imageVector = Icons.Default.Menu,
                     contentDescription = "Menu",
-                    modifier = Modifier.size(50.dp).padding(12.dp).clickable { onHamburgerClick() }
+                    modifier = Modifier.size(60.dp).padding(12.dp).clickable { onHamburgerClick() }
             )
           },
           title = {
@@ -99,7 +99,7 @@ fun MyTopBar(
             Image(
                     painter = painterResource(id = R.drawable.logo),
                     contentDescription = "Logo",
-                    modifier = Modifier.height(40.dp).clickable { onLogoClick() }
+                    modifier = Modifier.height(60.dp).padding(12.dp).clickable { onLogoClick() }
             )
           }
   )

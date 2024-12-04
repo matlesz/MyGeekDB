@@ -16,6 +16,7 @@ import ie.matlesz.mygeekdb.viewmodel.LoginViewModel
 fun LoginSignupScreen(loginViewModel: LoginViewModel = viewModel(), onLoginSuccess: () -> Unit) {
   var email by remember { mutableStateOf("") }
   var password by remember { mutableStateOf("") }
+  var displayName by remember { mutableStateOf("") }
   var isLogin by remember { mutableStateOf(true) }
 
   val loginState by loginViewModel.loginState.observeAsState()
@@ -40,22 +41,20 @@ fun LoginSignupScreen(loginViewModel: LoginViewModel = viewModel(), onLoginSucce
       }
       is LoginViewModel.LoginState.Error -> {
         AlertDialog(
-          onDismissRequest = {
-            showError = false
-            loginViewModel.clearError()
-          },
-          title = { Text("Error") },
-          text = { Text(state.message) },
-          confirmButton = {
-            TextButton(
-              onClick = {
-                showError = false
-                loginViewModel.clearError()
-              }
-            ) {
-              Text("OK")
-            }
-          }
+                onDismissRequest = {
+                  showError = false
+                  loginViewModel.clearError()
+                },
+                title = { Text("Error") },
+                text = { Text(state.message) },
+                confirmButton = {
+                  TextButton(
+                          onClick = {
+                            showError = false
+                            loginViewModel.clearError()
+                          }
+                  ) { Text("OK") }
+                }
         )
       }
       else -> {}
@@ -84,6 +83,18 @@ fun LoginSignupScreen(loginViewModel: LoginViewModel = viewModel(), onLoginSucce
 
     Spacer(modifier = Modifier.height(16.dp))
 
+    if (!isLogin) {
+      OutlinedTextField(
+              value = displayName,
+              onValueChange = { displayName = it },
+              label = { Text("First Name") },
+              singleLine = true,
+              modifier = Modifier.fillMaxWidth()
+      )
+
+      Spacer(modifier = Modifier.height(16.dp))
+    }
+
     OutlinedTextField(
             value = password,
             onValueChange = { password = it },
@@ -100,7 +111,7 @@ fun LoginSignupScreen(loginViewModel: LoginViewModel = viewModel(), onLoginSucce
               if (isLogin) {
                 loginViewModel.login(email, password)
               } else {
-                loginViewModel.register(email, password)
+                loginViewModel.register(email, password, displayName)
               }
             },
             modifier = Modifier.fillMaxWidth()
@@ -108,9 +119,15 @@ fun LoginSignupScreen(loginViewModel: LoginViewModel = viewModel(), onLoginSucce
 
     Spacer(modifier = Modifier.height(16.dp))
 
-    TextButton(onClick = { isLogin = !isLogin }) {
-      Text(if (isLogin) "Need an account? Sign Up" else "Have an account? Login")
-    }
+    TextButton(
+            onClick = {
+              isLogin = !isLogin
+              // Clear fields when switching modes
+              if (isLogin) {
+                displayName = ""
+              }
+            }
+    ) { Text(if (isLogin) "Need an account? Sign Up" else "Have an account? Login") }
   }
 }
 

@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
 import ie.matlesz.mygeekdb.model.User
 import kotlinx.coroutines.launch
@@ -48,18 +49,22 @@ class LoginViewModel : ViewModel() {
     }
   }
 
-  fun register(email: String, password: String) {
+  fun register(email: String, password: String, displayName: String) {
     viewModelScope.launch {
       try {
         _loginState.value = LoginState.Loading
         val result = auth.createUserWithEmailAndPassword(email, password).await()
         result.user?.let { firebaseUser ->
+          // Update display name in Firebase Auth
+          val profileUpdates = userProfileChangeRequest { this.displayName = displayName }
+          firebaseUser.updateProfile(profileUpdates).await()
+
           // Create new user document in Firestore
           val newUser =
                   User(
                           uid = firebaseUser.uid,
                           email = email,
-                          displayName = email.substringBefore('@'), // Default display name
+                          displayName = displayName,
                           photoUrl = firebaseUser.photoUrl?.toString()
                   )
           createNewUser(newUser)
