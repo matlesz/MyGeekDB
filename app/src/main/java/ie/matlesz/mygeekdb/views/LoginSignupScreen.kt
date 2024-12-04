@@ -57,6 +57,16 @@ fun LoginSignupScreen(loginViewModel: LoginViewModel = viewModel(), onLoginSucce
                 }
         )
       }
+      is LoginViewModel.LoginState.PasswordResetSent -> {
+        AlertDialog(
+                onDismissRequest = { loginViewModel.clearError() },
+                title = { Text("Password Reset") },
+                text = { Text("Password reset email has been sent. Please check your inbox.") },
+                confirmButton = {
+                  TextButton(onClick = { loginViewModel.clearError() }) { Text("OK") }
+                }
+        )
+      }
       else -> {}
     }
   }
@@ -118,6 +128,20 @@ fun LoginSignupScreen(loginViewModel: LoginViewModel = viewModel(), onLoginSucce
     ) { Text(if (isLogin) "Login" else "Sign Up") }
 
     Spacer(modifier = Modifier.height(16.dp))
+
+    if (isLogin) {
+      Spacer(modifier = Modifier.height(8.dp))
+      TextButton(
+              onClick = {
+                if (email.isNotEmpty()) {
+                  loginViewModel.sendPasswordResetEmail(email)
+                } else {
+                  showError = true
+                  errorMessage = "Please enter your email address"
+                }
+              }
+      ) { Text("Forgot Password?") }
+    }
 
     TextButton(
             onClick = {

@@ -120,10 +120,24 @@ class LoginViewModel : ViewModel() {
 
   fun getCurrentUserId(): String? = auth.currentUser?.uid
 
+  fun sendPasswordResetEmail(email: String) {
+    viewModelScope.launch {
+      try {
+        _loginState.value = LoginState.Loading
+        auth.sendPasswordResetEmail(email).await()
+        _loginState.value = LoginState.PasswordResetSent
+      } catch (e: Exception) {
+        Log.e("LoginViewModel", "Password reset failed", e)
+        _loginState.value = LoginState.Error(e.message ?: "Failed to send password reset email")
+      }
+    }
+  }
+
   sealed class LoginState {
     object Loading : LoginState()
     object Success : LoginState()
     object LoggedOut : LoginState()
+    object PasswordResetSent : LoginState()
     data class Error(val message: String) : LoginState()
   }
 }
