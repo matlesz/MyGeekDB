@@ -7,6 +7,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ie.matlesz.mygeekdb.viewmodel.MovieViewModel
 import ie.matlesz.mygeekdb.viewmodel.SeriesViewModel
+import ie.matlesz.mygeekdb.views.EditProfileView
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,31 +32,35 @@ fun HomePage(
   var isSearchFocused by remember { mutableStateOf(false) }
   var selectedItem by remember { mutableStateOf<Any?>(null) }
   var selectedTabIndex by remember { mutableStateOf(0) }
+  var showEditProfile by remember { mutableStateOf(false) }
 
   val searchResults = if (currentSearchType == "Movie") movieSearchResults else seriesSearchResults
   val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
   val scope = rememberCoroutineScope()
   val focusManager = LocalFocusManager.current
 
-  if (selectedItem != null) {
-    // Show Detailed Media View
+  if (showEditProfile) {
+    EditProfileView(
+        onNavigateBack = { showEditProfile = false },
+        onSaveSuccess = { showEditProfile = false }
+    )
+  } else if (selectedItem != null) {
     DetailedMediaView(item = selectedItem!!, onBack = { selectedItem = null })
   } else {
-    // Main Page Content
     ModalNavigationDrawer(
-            drawerState = drawerState,
-            drawerContent = {
-              DrawerContent(
-                      onCloseDrawer = { scope.launch { drawerState.close() } },
-                      onHomeClick = {
-                        isSearchFocused = false
-                        searchQuery = ""
-                        selectedTabIndex = 0
-                        scope.launch { drawerState.close() }
-                      }
-                      //          onFavoritesClick = { navController.navigate("favorites") }
-                      )
-            }
+        drawerState = drawerState,
+        drawerContent = {
+            DrawerContent(
+                onCloseDrawer = { scope.launch { drawerState.close() } },
+                onHomeClick = {
+                    isSearchFocused = false
+                    searchQuery = ""
+                    selectedTabIndex = 0
+                    scope.launch { drawerState.close() }
+                },
+                onEditProfileClick = { showEditProfile = true }
+            )
+        }
     ) {
       Scaffold(
               topBar = {

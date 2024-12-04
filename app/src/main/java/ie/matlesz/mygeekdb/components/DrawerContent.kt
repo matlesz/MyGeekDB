@@ -39,6 +39,7 @@ import ie.matlesz.mygeekdb.components.DrawerMenuItem
 fun DrawerContent(
         onCloseDrawer: () -> Unit,
         onHomeClick: () -> Unit,
+        onEditProfileClick: () -> Unit
 ) {
   val activity = LocalContext.current as? Activity
   val auth = FirebaseAuth.getInstance()
@@ -70,17 +71,17 @@ fun DrawerContent(
       // Profile Image
       if (currentUser?.photoUrl != null) {
         Image(
-          painter = rememberAsyncImagePainter(currentUser.photoUrl),
-          contentDescription = "Profile picture",
-          modifier = Modifier.size(100.dp).clip(CircleShape),
-          contentScale = ContentScale.Crop
+                painter = rememberAsyncImagePainter(currentUser.photoUrl),
+                contentDescription = "Profile picture",
+                modifier = Modifier.size(100.dp).clip(CircleShape),
+                contentScale = ContentScale.Crop
         )
       } else {
         Icon(
-          imageVector = Icons.Default.Person,
-          contentDescription = "Default profile picture",
-          modifier = Modifier.size(100.dp).clip(CircleShape),
-          tint = Color.White
+                imageVector = Icons.Default.Person,
+                contentDescription = "Default profile picture",
+                modifier = Modifier.size(100.dp).clip(CircleShape),
+                tint = Color.White
         )
       }
 
@@ -88,24 +89,27 @@ fun DrawerContent(
 
       // User Info
       Text(
-        text = currentUser?.displayName ?: "Guest",
-        style = MaterialTheme.typography.titleMedium,
-        color = Color.White
+              text = currentUser?.displayName ?: "Guest",
+              style = MaterialTheme.typography.titleMedium,
+              color = Color.White
       )
       Text(
-        text = currentUser?.email ?: "",
-        style = MaterialTheme.typography.bodyMedium,
-        color = Color.White.copy(alpha = 0.7f)
+              text = currentUser?.email ?: "",
+              style = MaterialTheme.typography.bodyMedium,
+              color = Color.White.copy(alpha = 0.7f)
       )
 
       Spacer(modifier = Modifier.height(8.dp))
 
       // Edit Profile Button
       OutlinedButton(
-        onClick = { /* TODO: Add edit profile navigation */ },
-        modifier = Modifier.fillMaxWidth(0.8f),
-        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-        border = BorderStroke(1.dp, Color.White)
+              onClick = {
+                onEditProfileClick()
+                onCloseDrawer()
+              },
+              modifier = Modifier.fillMaxWidth(0.8f),
+              colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+              border = BorderStroke(1.dp, Color.White)
       ) { Text("Edit Profile") }
     }
 
