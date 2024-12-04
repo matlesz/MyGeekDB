@@ -43,6 +43,7 @@ fun DrawerContent(
         onCloseDrawer: () -> Unit,
         onHomeClick: () -> Unit,
         onEditProfileClick: () -> Unit,
+        onAboutClick: () -> Unit,
         userViewModel: UserViewModel
 ) {
   val activity = LocalContext.current as? Activity
@@ -121,7 +122,10 @@ fun DrawerContent(
     HorizontalDivider(color = Color.White.copy(alpha = 0.5f))
 
     DrawerMenuItem(text = "Home") { onHomeClick() }
-    DrawerMenuItem(text = "About") { /* Add About Logic */}
+    DrawerMenuItem(text = "About") {
+      onCloseDrawer()
+      onAboutClick()
+    }
     DrawerMenuItem(text = "Logout") {
       auth.signOut()
       activity?.finishAffinity()

@@ -12,6 +12,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import ie.matlesz.mygeekdb.viewmodel.MovieViewModel
 import ie.matlesz.mygeekdb.viewmodel.SeriesViewModel
 import ie.matlesz.mygeekdb.viewmodel.UserViewModel
+import ie.matlesz.mygeekdb.views.AboutView
 import ie.matlesz.mygeekdb.views.EditProfileView
 import kotlinx.coroutines.launch
 
@@ -39,6 +40,7 @@ fun HomePage(
   var selectedItem by remember { mutableStateOf<Any?>(null) }
   var selectedTabIndex by remember { mutableStateOf(0) }
   var showEditProfile by remember { mutableStateOf(false) }
+  var showAboutPage by remember { mutableStateOf(false) }
 
   var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
   val searchResults = if (currentSearchType == "Movie") movieSearchResults else seriesSearchResults
@@ -55,7 +57,9 @@ fun HomePage(
             }
           }
 
-  if (showEditProfile) {
+  if (showAboutPage) {
+    AboutView(onNavigateBack = { showAboutPage = false })
+  } else if (showEditProfile) {
     EditProfileView(
             onNavigateBack = {
               showEditProfile = false
@@ -85,6 +89,7 @@ fun HomePage(
                         scope.launch { drawerState.close() }
                       },
                       onEditProfileClick = { showEditProfile = true },
+                      onAboutClick = { showAboutPage = true },
                       userViewModel = userViewModel
               )
             }
