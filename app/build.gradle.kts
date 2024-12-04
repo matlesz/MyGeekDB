@@ -111,6 +111,13 @@ dependencies {
   implementation("io.coil-kt:coil-compose:2.2.2")
   implementation("androidx.compose.material:material-icons-extended:1.7.5")
   implementation("androidx.navigation:navigation-compose:2.8.4")
+  implementation ("androidx.compose.animation:animation:1.6.1")
+  implementation("androidx.compose.material3:material3-window-size-class:1.2.0")
+  implementation ("androidx.compose.foundation:foundation:1.6.1")
+  implementation ("androidx.compose.material:material-icons-extended:1.6.1")
+  implementation("androidx.compose.material3:material3-window-size-class:1.2.0")
+  implementation("androidx.compose.animation:animation:1.6.1")
+  implementation("androidx.compose.material:material:1.6.1")
 
   //firebase
   implementation(platform("com.google.firebase:firebase-bom:33.6.0"))

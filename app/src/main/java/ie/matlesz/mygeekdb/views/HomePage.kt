@@ -13,6 +13,7 @@ import ie.matlesz.mygeekdb.viewmodel.SeriesViewModel
 import ie.matlesz.mygeekdb.viewmodel.UserViewModel
 import ie.matlesz.mygeekdb.views.AboutView
 import ie.matlesz.mygeekdb.views.EditProfileView
+import ie.matlesz.mygeekdb.views.FavoritesView
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -231,6 +232,12 @@ fun HomePage(
                                 when (item) {
                                   is Movie -> movieViewModel.toggleFavorite(item)
                                   is Series -> seriesViewModel.toggleFavorite(item)
+                                }
+                              },
+                              onDeleteFavorite = { item ->
+                                when (item) {
+                                  is Movie -> movieViewModel.removeFavorite(item)
+                                  is Series -> seriesViewModel.removeFavorite(item)
                                 }
                               }
                       )

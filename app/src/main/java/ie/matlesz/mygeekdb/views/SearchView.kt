@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import ie.matlesz.mygeekdb.components.MediaItem
 import ie.matlesz.mygeekdb.views.LoadingScreen
 
 @OptIn(ExperimentalMaterial3Api::class)

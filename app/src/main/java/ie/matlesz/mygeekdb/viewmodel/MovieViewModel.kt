@@ -14,6 +14,7 @@ import com.google.gson.Gson
 import ie.matlesz.mygeekdb.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
@@ -123,10 +124,6 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
             }
 
     _favorites.value = newFavorites
-    Log.d("MovieViewModel", "Current favorites count: ${newFavorites.size}")
-
-    // Save to Firestore
-    saveFavoritesToFirestore(newFavorites)
 
     // Update individual item in Firestore
     val movieRef =
@@ -135,7 +132,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
                     .collection("favoriteMovies")
                     .document(movie.id.toString())
 
-    if (updatedMovie.isFavorite) {
+    if (!movie.isFavorite) { // Changed condition to match the intended behavior
       movieRef.set(updatedMovie)
               .addOnSuccessListener {
                 Log.d("MovieViewModel", "Successfully saved movie to Firestore: ${movie.title}")
@@ -160,6 +157,37 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
 
   fun isFavorite(movie: Movie): Boolean {
     return _favorites.value?.any { it.id == movie.id } == true
+  }
+
+  fun removeFavorite(item: Any) {
+    viewModelScope.launch {
+      try {
+        val userId = auth.currentUser?.uid ?: return@launch
+
+        when (item) {
+          is Movie -> {
+            db.collection("users")
+                    .document(userId)
+                    .collection("favoriteMovies")
+                    .document(item.id.toString())
+                    .delete()
+                    .await()
+
+            // Update local favorites list
+            _favorites.value = _favorites.value?.filter { it.id != item.id }
+            // Update movie's favorite status in other lists
+            _movies.value =
+                    _movies.value?.map { if (it.id == item.id) it.copy(isFavorite = false) else it }
+            _searchResults.value =
+                    _searchResults.value?.map {
+                      if (it.id == item.id) it.copy(isFavorite = false) else it
+                    }
+          }
+        }
+      } catch (e: Exception) {
+        Log.e("MovieViewModel", "Error removing favorite", e)
+      }
+    }
   }
 
   fun fetchMovieRecommendations() {
@@ -269,4 +297,21 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
       }
     }
   }
+
+  private fun loadFavorites() {
+    viewModelScope.launch {
+      try {
+        val userId = auth.currentUser?.uid ?: return@launch
+        val snapshot =
+                db.collection("users").document(userId).collection("favoriteMovies").get().await()
+
+        val movieList = snapshot.documents.mapNotNull { doc -> doc.toObject(Movie::class.java) }
+        _favorites.value = movieList
+      } catch (e: Exception) {
+        Log.e("MovieViewModel", "Error loading favorites", e)
+      }
+    }
+  }
+
+  fun getCurrentUserId(): String? = auth.currentUser?.uid
 }

@@ -14,6 +14,8 @@ import com.google.gson.Gson
 import ie.matlesz.mygeekdb.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
@@ -166,7 +168,38 @@ class SeriesViewModel(application: Application) : AndroidViewModel(application) 
   }
 
   fun isFavorite(series: Series): Boolean {
-    return _favorites.value?.any { it.id == series.id } == true
+    return _favorites.value?.any { it.id == series.id } ?: false
+  }
+
+  fun removeFavorite(item: Any) {
+    viewModelScope.launch {
+      try {
+        val userId = auth.currentUser?.uid ?: return@launch
+
+        when (item) {
+          is Series -> {
+            db.collection("users")
+                    .document(userId)
+                    .collection("favoriteSeries")
+                    .document(item.id.toString())
+                    .delete()
+                    .await()
+
+            // Update local favorites list
+            _favorites.value = _favorites.value?.filter { it.id != item.id }
+            // Update series' favorite status in other lists
+            _series.value =
+                    _series.value?.map { if (it.id == item.id) it.copy(isFavorite = false) else it }
+            _searchResults.value =
+                    _searchResults.value?.map {
+                      if (it.id == item.id) it.copy(isFavorite = false) else it
+                    }
+          }
+        }
+      } catch (e: Exception) {
+        Log.e("SeriesViewModel", "Error removing favorite", e)
+      }
+    }
   }
 
   fun fetchSeriesRecommendations() {
@@ -177,9 +210,7 @@ class SeriesViewModel(application: Application) : AndroidViewModel(application) 
 
         val request =
                 Request.Builder()
-                        .url(
-                                "https://api.themoviedb.org/4/account/62cf1c5afcf907004dbdae6e/tv/recommendations?page=1&language=en-US"
-                        )
+                        .url("https://api.themoviedb.org/3/tv/popular?language=en-US&page=1")
                         .get()
                         .addHeader("accept", "application/json")
                         .addHeader("Authorization", apiKey)
@@ -194,29 +225,36 @@ class SeriesViewModel(application: Application) : AndroidViewModel(application) 
             val seriesList = mutableListOf<Series>()
             for (i in 0 until resultsArray.length()) {
               val seriesObj = resultsArray.getJSONObject(i)
+              val posterPath = seriesObj.optString("poster_path")
               val series =
                       Series(
                               id = seriesObj.getInt("id"),
                               title = seriesObj.getString("name"),
                               overview = seriesObj.getString("overview"),
                               posterPath =
-                                      "https://image.tmdb.org/t/p/w500${seriesObj.getString("poster_path")}",
-                              thumbsUp = 0,
+                                      if (posterPath.isNotEmpty())
+                                              "https://image.tmdb.org/t/p/w500$posterPath"
+                                      else "https://via.placeholder.com/500x750.png?text=No+Poster",
                               voteAverage = seriesObj.getDouble("vote_average"),
                               voteCount = seriesObj.getInt("vote_count"),
                               popularity = seriesObj.getDouble("popularity"),
                               isFavorite =
-                                      _favorites.value?.any { it.id == seriesObj.getInt("id") } ==
-                                              true
+                                      isFavorite(
+                                              Series(
+                                                      id = seriesObj.getInt("id"),
+                                                      title = seriesObj.getString("name"),
+                                                      overview = seriesObj.getString("overview"),
+                                                      posterPath = posterPath
+                                              )
+                                      )
                       )
               seriesList.add(series)
             }
-
-            _series.postValue(seriesList)
+            withContext(Dispatchers.Main) { _series.value = seriesList }
           }
         }
       } catch (e: Exception) {
-        Log.e("SeriesViewModel", "Error fetching recommendations: ${e.message}", e)
+        Log.e("SeriesViewModel", "Error fetching series recommendations", e)
       }
     }
   }
