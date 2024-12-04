@@ -22,6 +22,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,16 +36,18 @@ import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.google.firebase.auth.FirebaseAuth
 import ie.matlesz.mygeekdb.components.DrawerMenuItem
+import ie.matlesz.mygeekdb.viewmodel.UserViewModel
 
 @Composable
 fun DrawerContent(
         onCloseDrawer: () -> Unit,
         onHomeClick: () -> Unit,
-        onEditProfileClick: () -> Unit
+        onEditProfileClick: () -> Unit,
+        userViewModel: UserViewModel
 ) {
   val activity = LocalContext.current as? Activity
   val auth = FirebaseAuth.getInstance()
-  val currentUser = auth.currentUser
+  val currentUser by userViewModel.currentUser.observeAsState()
 
   Column(
           modifier =
@@ -69,9 +73,10 @@ fun DrawerContent(
             horizontalAlignment = Alignment.CenterHorizontally
     ) {
       // Profile Image
-      if (currentUser?.photoUrl != null) {
+      val photoUrl = currentUser?.photoUrl
+      if (!photoUrl.isNullOrEmpty()) {
         Image(
-                painter = rememberAsyncImagePainter(currentUser.photoUrl),
+                painter = rememberAsyncImagePainter(photoUrl),
                 contentDescription = "Profile picture",
                 modifier = Modifier.size(100.dp).clip(CircleShape),
                 contentScale = ContentScale.Crop

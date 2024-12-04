@@ -1,3 +1,7 @@
+import android.net.Uri
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -7,6 +11,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ie.matlesz.mygeekdb.viewmodel.MovieViewModel
 import ie.matlesz.mygeekdb.viewmodel.SeriesViewModel
+import ie.matlesz.mygeekdb.viewmodel.UserViewModel
 import ie.matlesz.mygeekdb.views.EditProfileView
 import kotlinx.coroutines.launch
 
@@ -14,7 +19,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun HomePage(
         movieViewModel: MovieViewModel = viewModel(),
-        seriesViewModel: SeriesViewModel = viewModel()
+        seriesViewModel: SeriesViewModel = viewModel(),
+        userViewModel: UserViewModel = viewModel()
 ) {
   // Observables for Movies and Series
   val movies by movieViewModel.movies.observeAsState(emptyList())
@@ -34,33 +40,54 @@ fun HomePage(
   var selectedTabIndex by remember { mutableStateOf(0) }
   var showEditProfile by remember { mutableStateOf(false) }
 
+  var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
   val searchResults = if (currentSearchType == "Movie") movieSearchResults else seriesSearchResults
   val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
   val scope = rememberCoroutineScope()
   val focusManager = LocalFocusManager.current
 
+  val imagePickerLauncher =
+          rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) {
+                  uri: Uri? ->
+            if (uri != null) {
+              Log.d("HomePage", "Image selected: $uri")
+              selectedImageUri = uri
+            }
+          }
+
   if (showEditProfile) {
     EditProfileView(
-        onNavigateBack = { showEditProfile = false },
-        onSaveSuccess = { showEditProfile = false }
+            onNavigateBack = {
+              showEditProfile = false
+              selectedImageUri = null
+            },
+            onSaveSuccess = {
+              showEditProfile = false
+              selectedImageUri = null
+              scope.launch { drawerState.close() }
+            },
+            launcher = imagePickerLauncher,
+            initialImageUri = selectedImageUri,
+            userViewModel = userViewModel
     )
   } else if (selectedItem != null) {
     DetailedMediaView(item = selectedItem!!, onBack = { selectedItem = null })
   } else {
     ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            DrawerContent(
-                onCloseDrawer = { scope.launch { drawerState.close() } },
-                onHomeClick = {
-                    isSearchFocused = false
-                    searchQuery = ""
-                    selectedTabIndex = 0
-                    scope.launch { drawerState.close() }
-                },
-                onEditProfileClick = { showEditProfile = true }
-            )
-        }
+            drawerState = drawerState,
+            drawerContent = {
+              DrawerContent(
+                      onCloseDrawer = { scope.launch { drawerState.close() } },
+                      onHomeClick = {
+                        isSearchFocused = false
+                        searchQuery = ""
+                        selectedTabIndex = 0
+                        scope.launch { drawerState.close() }
+                      },
+                      onEditProfileClick = { showEditProfile = true },
+                      userViewModel = userViewModel
+              )
+            }
     ) {
       Scaffold(
               topBar = {
@@ -201,7 +228,4 @@ fun HomePage(
     }
   }
 }
-
-// add about
-// add readme
 // add profile image storage on firebase

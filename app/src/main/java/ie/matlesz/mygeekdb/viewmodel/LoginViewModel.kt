@@ -59,7 +59,8 @@ class LoginViewModel : ViewModel() {
                   User(
                           uid = firebaseUser.uid,
                           email = email,
-                          displayName = email.substringBefore('@') // Default display name
+                          displayName = email.substringBefore('@'), // Default display name
+                          photoUrl = firebaseUser.photoUrl?.toString()
                   )
           createNewUser(newUser)
           _loginState.value = LoginState.Success
@@ -84,7 +85,8 @@ class LoginViewModel : ViewModel() {
                   User(
                           uid = uid,
                           email = auth.currentUser?.email ?: "",
-                          displayName = auth.currentUser?.displayName
+                          displayName = auth.currentUser?.displayName,
+                          photoUrl = auth.currentUser?.photoUrl?.toString()
                   )
           createNewUser(newUser)
         }

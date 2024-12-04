@@ -14,14 +14,6 @@
       },
       "oauth_client": [
         {
-          "client_id": "650051430718-9bojs56h2uf9l23cq0pqtbnv8df240ui.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "ie.matlesz.mygeekdb",
-            "certificate_hash": "b79270d6f22d3219ede1b3b210e5a97048561e51"
-          }
-        },
-        {
           "client_id": "650051430718-pmn0cmbiifg4atmh2vn4nr31sg20oadn.apps.googleusercontent.com",
           "client_type": 3
         }

@@ -82,6 +82,7 @@ dependencies {
   implementation(libs.androidx.foundation.layout.android)
   implementation(libs.androidx.foundation.layout.android)
   implementation(libs.androidx.foundation.layout.android)
+  implementation(libs.androidx.foundation.layout.android)
   testImplementation(libs.junit)
   androidTestImplementation(libs.androidx.junit)
   androidTestImplementation(libs.androidx.espresso.core)
@@ -120,6 +121,8 @@ dependencies {
   implementation("com.google.firebase:firebase-analytics")
   implementation ("com.google.firebase:firebase-auth:22.0.0")
   implementation("com.google.firebase:firebase-firestore-ktx:24.10.0")
+  implementation("com.google.firebase:firebase-storage-ktx:20.3.0")
+  implementation ("com.google.firebase:firebase-database:20.2.0")
 
   implementation ("androidx.core:core-splashscreen:1.0.0")
   implementation("com.google.code.gson:gson:2.10.1")
