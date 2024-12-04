@@ -197,9 +197,6 @@ fun HomePage(
   }
 }
 
-// add toggle stage state
-// add permanent storage for the favourite list
-// add firebase database
 // add about
 // add readme
 // add profile image storage on firebase
