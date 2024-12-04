@@ -37,7 +37,7 @@ fun FavoritesView(
     Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
       // Toggle buttons
       Row(
-              modifier = Modifier.fillMaxWidth().padding(16.dp),
+              modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
               horizontalArrangement = Arrangement.SpaceEvenly
       ) {
         Button(
@@ -48,7 +48,8 @@ fun FavoritesView(
                                         if (currentFavoriteType == "Movie")
                                                 MaterialTheme.colorScheme.primary
                                         else Color.Gray
-                        )
+                        ),
+                modifier = Modifier.padding(horizontal = 4.dp)
         ) { Text("Movies") }
 
         Button(
@@ -59,7 +60,8 @@ fun FavoritesView(
                                         if (currentFavoriteType == "Series")
                                                 MaterialTheme.colorScheme.primary
                                         else Color.Gray
-                        )
+                        ),
+                modifier = Modifier.padding(horizontal = 4.dp)
         ) { Text("Series") }
       }
 

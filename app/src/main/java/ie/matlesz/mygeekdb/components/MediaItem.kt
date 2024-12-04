@@ -4,8 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -13,7 +11,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -31,7 +28,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import ie.matlesz.mygeekdb.R
-import java.util.Locale
 
 @Composable
 fun MediaItem(
@@ -58,54 +54,32 @@ fun MediaItem(
       AsyncImage(
               model = posterPath?.takeIf { it.isNotBlank() },
               contentDescription = "Poster of $title",
-              modifier = Modifier.size(100.dp).clip(RoundedCornerShape(8.dp)),
+              modifier = Modifier.size(60.dp).clip(RoundedCornerShape(4.dp)),
               contentScale = ContentScale.Crop,
-              placeholder = painterResource(R.drawable.placeholder_image),
               error = painterResource(R.drawable.placeholder_image)
       )
 
-      Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
+      Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
         Text(
                 text = title ?: "No Title",
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleSmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
         )
         Text(
                 text = overview ?: "No Overview",
                 style = MaterialTheme.typography.bodySmall,
-                maxLines = 3,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
         )
-        Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-        ) {
-          Icon(
-                  imageVector = Icons.Default.ThumbUp,
-                  contentDescription = "Vote Average",
-                  modifier = Modifier.size(20.dp)
-          )
-          Text(
-                  text = String.format(Locale.US, "%.1f", voteAverage ?: 0.0),
-                  style = MaterialTheme.typography.bodyMedium,
-                  modifier = Modifier.padding(start = 4.dp)
-          )
+      }
 
-          // Spacer between vote average and favorite button
-          Spacer(modifier = Modifier.weight(1f))
-
-          // Favorite button
-          IconButton(onClick = onFavoriteClick) {
-            Icon(
-                    imageVector =
-                            if (isFavorite) Icons.Filled.Favorite
-                            else Icons.Outlined.FavoriteBorder,
-                    contentDescription =
-                            if (isFavorite) "Unmark as Favorite" else "Mark as Favorite"
-            )
-          }
-        }
+      IconButton(onClick = onFavoriteClick, modifier = Modifier.size(32.dp)) {
+        Icon(
+                imageVector =
+                        if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                contentDescription = if (isFavorite) "Unmark as Favorite" else "Mark as Favorite"
+        )
       }
     }
   }
