@@ -119,6 +119,7 @@ dependencies {
   implementation("com.google.firebase:firebase-firestore-ktx:25.1.1")
   implementation("com.google.firebase:firebase-storage-ktx:21.0.1")
   implementation ("com.google.firebase:firebase-database:21.0.0")
+  implementation ("com.google.android.gms:play-services-auth:20.7.0")
 
   implementation ("androidx.core:core-splashscreen:1.0.1")
   implementation("com.google.code.gson:gson:2.10.1")

@@ -6,14 +6,20 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ie.matlesz.mygeekdb.viewmodel.LoginViewModel
+import ie.matlesz.mygeekdb.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginSignupScreen(loginViewModel: LoginViewModel = viewModel(), onLoginSuccess: () -> Unit) {
+fun LoginSignupScreen(
+        loginViewModel: LoginViewModel = viewModel(),
+        onLoginSuccess: () -> Unit,
+        onGoogleSignInClick: () -> Unit
+) {
   var email by remember { mutableStateOf("") }
   var password by remember { mutableStateOf("") }
   var displayName by remember { mutableStateOf("") }
@@ -126,6 +132,23 @@ fun LoginSignupScreen(loginViewModel: LoginViewModel = viewModel(), onLoginSucce
             },
             modifier = Modifier.fillMaxWidth()
     ) { Text(if (isLogin) "Login" else "Sign Up") }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    OutlinedButton(onClick = onGoogleSignInClick, modifier = Modifier.fillMaxWidth()) {
+      Row(
+              horizontalArrangement = Arrangement.Center,
+              verticalAlignment = Alignment.CenterVertically
+      ) {
+        Icon(
+                painter = painterResource(id = R.drawable.ic_google),
+                contentDescription = "Google Icon",
+                modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text("Sign in with Google")
+      }
+    }
 
     Spacer(modifier = Modifier.height(16.dp))
 

@@ -1,16 +1,23 @@
 package ie.matlesz.mygeekdb.viewmodel
 
+import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
 import ie.matlesz.mygeekdb.model.User
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import ie.matlesz.mygeekdb.R
 
 class LoginViewModel : ViewModel() {
   private val auth = FirebaseAuth.getInstance()
@@ -21,6 +28,8 @@ class LoginViewModel : ViewModel() {
 
   private val _currentUser = MutableLiveData<User?>()
   val currentUser: LiveData<User?> = _currentUser
+
+  private lateinit var googleSignInClient: GoogleSignInClient
 
   init {
     // Clear any existing auth state
@@ -132,6 +141,43 @@ class LoginViewModel : ViewModel() {
       }
     }
   }
+
+  fun initGoogleSignIn(context: Context) {
+    val gso =
+            GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestIdToken(context.getString(R.string.default_web_client_id))
+                    .requestEmail()
+                    .build()
+
+    googleSignInClient = GoogleSignIn.getClient(context, gso)
+  }
+
+  fun signInWithGoogle(idToken: String) {
+    viewModelScope.launch {
+      try {
+        _loginState.value = LoginState.Loading
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        val result = auth.signInWithCredential(credential).await()
+
+        result.user?.let { firebaseUser ->
+          val user =
+                  User(
+                          uid = firebaseUser.uid,
+                          email = firebaseUser.email ?: "",
+                          displayName = firebaseUser.displayName ?: "",
+                          photoUrl = firebaseUser.photoUrl?.toString()
+                  )
+          createNewUser(user)
+          _loginState.value = LoginState.Success
+        }
+      } catch (e: Exception) {
+        Log.e("LoginViewModel", "Google sign in failed", e)
+        _loginState.value = LoginState.Error(e.message ?: "Google sign in failed")
+      }
+    }
+  }
+
+  fun getGoogleSignInIntent(): Intent = googleSignInClient.signInIntent
 
   sealed class LoginState {
     object Loading : LoginState()
