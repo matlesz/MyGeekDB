@@ -98,34 +98,30 @@ dependencies {
   implementation ("androidx.compose.material3:material3:1.3.1")
 
 // Compose LiveData and ViewModel
-  implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
-  implementation ("androidx.compose.runtime:runtime-livedata:1.7.5")
+  implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+  implementation("androidx.compose.runtime:runtime-livedata:1.7.5")
 
 // Compose Tooling (for previews)
-  implementation ("androidx.compose.ui:ui-tooling-preview:1.7.5")
-  debugImplementation ("androidx.compose.ui:ui-tooling:1.7.5")
+  implementation("androidx.compose.ui:ui-tooling-preview:1.7.5")
+  debugImplementation("androidx.compose.ui:ui-tooling:1.7.5")
 
-// Compose Activity
-  implementation ("androidx.activity:activity-compose:1.9.3")
-  implementation ("androidx.compose.ui:ui:1.7.5")
-  implementation ("androidx.compose.material3:material3:1.3.1")
-  implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
-  implementation ("androidx.compose.runtime:runtime-livedata:1.7.5")
+// Compose Dependencies
+  implementation("androidx.compose.ui:ui:1.7.5")
+  implementation("androidx.compose.material3:material3:1.3.1")
   implementation("io.coil-kt:coil-compose:2.2.2")
-  implementation ("androidx.compose.material:material-icons-extended:1.7.5")
-  implementation ("androidx.navigation:navigation-compose:2.6.0-alpha01")
-
+  implementation("androidx.compose.material:material-icons-extended:1.7.5")
+  implementation("androidx.navigation:navigation-compose:2.8.4")
 
   //firebase
   implementation(platform("com.google.firebase:firebase-bom:33.6.0"))
   implementation("com.google.firebase:firebase-analytics")
-  implementation ("com.google.firebase:firebase-auth:22.0.0")
-  implementation("com.google.firebase:firebase-firestore-ktx:24.10.0")
-  implementation("com.google.firebase:firebase-storage-ktx:20.3.0")
-  implementation ("com.google.firebase:firebase-database:20.2.0")
+  implementation ("com.google.firebase:firebase-auth:23.1.0")
+  implementation("com.google.firebase:firebase-firestore-ktx:25.1.1")
+  implementation("com.google.firebase:firebase-storage-ktx:21.0.1")
+  implementation ("com.google.firebase:firebase-database:21.0.0")
 
-  implementation ("androidx.core:core-splashscreen:1.0.0")
+  implementation ("androidx.core:core-splashscreen:1.0.1")
   implementation("com.google.code.gson:gson:2.10.1")
-  implementation ("io.coil-kt:coil-compose:2.1.0")
+  implementation ("io.coil-kt:coil-compose:2.2.2")
 
 }
