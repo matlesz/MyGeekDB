@@ -177,4 +177,3 @@ fun LoginSignupScreen(
     ) { Text(if (isLogin) "Need an account? Sign Up" else "Have an account? Login") }
   }
 }
-
