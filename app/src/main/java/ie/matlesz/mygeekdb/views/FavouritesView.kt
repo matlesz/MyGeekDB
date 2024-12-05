@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import ie.matlesz.mygeekdb.components.MediaItem
+import ie.matlesz.mygeekdb.components.SwipeableMediaItem
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -92,81 +93,6 @@ fun FavoritesView(
           Spacer(modifier = Modifier.height(8.dp))
         }
       }
-    }
-  }
-}
-
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-private fun SwipeableMediaItem(
-        item: Any,
-        onItemClick: (Any) -> Unit,
-        onFavoriteClick: (Any) -> Unit,
-        onDelete: () -> Unit
-) {
-  val dismissState =
-          rememberDismissState(
-                  confirmStateChange = { dismissValue ->
-                    when (dismissValue) {
-                      DismissValue.DismissedToEnd, DismissValue.DismissedToStart -> {
-                        onDelete()
-                        true
-                      }
-                      DismissValue.Default -> false
-                    }
-                  }
-          )
-
-  SwipeToDismiss(
-          state = dismissState,
-          background = {
-            Box(
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
-                    contentAlignment = Alignment.CenterEnd
-            ) {
-              Icon(
-                      imageVector = Icons.Default.Delete,
-                      contentDescription = "Delete",
-                      tint = MaterialTheme.colorScheme.error,
-                      modifier = Modifier.size(32.dp)
-              )
-            }
-          },
-          dismissContent = {
-            FavoriteItemCard(
-                    item = item,
-                    onItemClick = onItemClick,
-                    onFavoriteClick = onFavoriteClick
-            )
-          },
-          directions = setOf(DismissDirection.EndToStart)
-  )
-}
-
-@Composable
-fun FavoriteItemCard(item: Any, onItemClick: (Any) -> Unit, onFavoriteClick: (Any) -> Unit) {
-  when (item) {
-    is Movie -> {
-      MediaItem(
-              title = item.title,
-              overview = item.overview,
-              posterPath = item.posterPath,
-              voteAverage = item.voteAverage,
-              onClick = { onItemClick(item) },
-              onFavoriteClick = { onFavoriteClick(item) },
-              isFavorite = item.isFavorite
-      )
-    }
-    is Series -> {
-      MediaItem(
-              title = item.title,
-              overview = item.overview,
-              posterPath = item.posterPath,
-              voteAverage = item.voteAverage,
-              onClick = { onItemClick(item) },
-              onFavoriteClick = { onFavoriteClick(item) },
-              isFavorite = item.isFavorite
-      )
     }
   }
 }

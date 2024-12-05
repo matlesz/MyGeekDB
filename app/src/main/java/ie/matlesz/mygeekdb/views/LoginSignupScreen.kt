@@ -178,14 +178,3 @@ fun LoginSignupScreen(
   }
 }
 
-@Composable
-fun LoadingScreen() {
-  Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-    CircularProgressIndicator()
-  }
-}
-
-@Composable
-fun ErrorScreen(message: String) {
-  Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(message) }
-}
