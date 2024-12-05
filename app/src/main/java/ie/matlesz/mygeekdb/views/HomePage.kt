@@ -21,7 +21,8 @@ import kotlinx.coroutines.launch
 fun HomePage(
         movieViewModel: MovieViewModel = viewModel(),
         seriesViewModel: SeriesViewModel = viewModel(),
-        userViewModel: UserViewModel = viewModel()
+        userViewModel: UserViewModel = viewModel(),
+        onNavigateToLogin: () -> Unit
 ) {
   // Observables for Movies and Series
   val movies by movieViewModel.movies.observeAsState(emptyList())
@@ -73,7 +74,8 @@ fun HomePage(
             },
             launcher = imagePickerLauncher,
             initialImageUri = selectedImageUri,
-            userViewModel = userViewModel
+            userViewModel = userViewModel,
+            onNavigateToLogin = onNavigateToLogin
     )
   } else if (selectedItem != null) {
     DetailedMediaView(item = selectedItem!!, onBack = { selectedItem = null })

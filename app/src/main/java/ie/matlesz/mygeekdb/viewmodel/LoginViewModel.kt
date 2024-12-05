@@ -125,6 +125,11 @@ class LoginViewModel : ViewModel() {
     auth.signOut()
     _currentUser.value = null
     _loginState.value = LoginState.LoggedOut
+
+    // Sign out from Google if using Google Sign-In
+    googleSignInClient.signOut().addOnCompleteListener {
+      // Handle any post-sign-out actions if needed
+    }
   }
 
   fun getCurrentUserId(): String? = auth.currentUser?.uid

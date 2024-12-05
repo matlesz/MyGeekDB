@@ -177,15 +177,3 @@ fun LoginSignupScreen(
     ) { Text(if (isLogin) "Need an account? Sign Up" else "Have an account? Login") }
   }
 }
-
-@Composable
-fun LoadingScreen() {
-  Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-    CircularProgressIndicator()
-  }
-}
-
-@Composable
-fun ErrorScreen(message: String) {
-  Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(message) }
-}
