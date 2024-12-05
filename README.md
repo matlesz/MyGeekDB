@@ -4,7 +4,7 @@
 MyGeekDB is a Firebase-powered Android application built with Jetpack Compose that allows users to manage their profile, 
 authenticate using email or Google Sign-In, and includes features like profile picture management and account deletion.
 
-#Project Walkthrough
+# Project Walkthrough
 
 [Video](https://youtu.be/EW1q2XsieC0)
 
